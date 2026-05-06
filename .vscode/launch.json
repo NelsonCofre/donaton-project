@@ -1,14 +1,24 @@
 {
-    "configurations": [
-        {
-            "type": "java",
-            "name": "Spring Boot-AuthServiceApplication<auth-service>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.donaton.auth.AuthServiceApplication",
-            "projectName": "auth-service",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        }
-    ]
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-AuthServiceApplication<auth-service>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.donaton.auth.AuthServiceApplication",
+      "projectName": "auth-service",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-NecessityServiceApplication<necessity-service>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.donaton.necessity.NecessityServiceApplication",
+      "projectName": "necessity-service",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
 }
