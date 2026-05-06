@@ -6,7 +6,8 @@
 
 Donaton es una plataforma orientada a la gestión de ayuda humanitaria, permitiendo registrar donaciones, necesidades en terreno y coordinar la logística de distribución.
 
-El sistema se basa en una arquitectura de microservicios contenedorizados con Docker, incorporando un Backend for Frontend (BFF) y un API Gateway.
+El sistema implementa una arquitectura de **microservicios contenedorizados con Docker**, incorporando un **Backend for Frontend (BFF)** y un **API Gateway (KrakenD)**.
+El frontend está desarrollado en **React + TypeScript** y el backend en **Java 21 con Spring Boot**, utilizando **Gradle (Groovy DSL)** como herramienta de construcción.
 
 ---
 
@@ -33,9 +34,9 @@ Separación por dominios:
 
 ### ✔ API Gateway Pattern (KrakenD)
 
-- Enrutamiento
-- Seguridad
-- Validación JWT
+- Enrutamiento de solicitudes
+- Seguridad (validación JWT)
+- Centralización de acceso
 
 ---
 
@@ -43,13 +44,14 @@ Separación por dominios:
 
 - Orquesta múltiples microservicios
 - Reduce llamadas desde frontend
-- Adapta respuestas
+- Adapta respuestas a la UI
+- Utiliza **WebClient** para comunicación entre servicios
 
 ---
 
 ### ✔ Database per Service
 
-Cada microservicio posee su propia base de datos independiente.
+Cada microservicio posee su propia base de datos independiente, evitando el acoplamiento.
 
 ---
 
@@ -57,16 +59,17 @@ Cada microservicio posee su propia base de datos independiente.
 
 Cada componente se ejecuta en su propio contenedor:
 
+- Frontend
 - BFF
 - KrakenD
 - Microservicios
-- Bases de datos (una por microservicio)
+- Bases de datos
 
 ---
 
 # 🗄️ Bases de Datos por Microservicio
 
-Cada microservicio tiene su propia base de datos dentro de su contenedor Docker.
+Se implementa el patrón **Database per Service**, donde cada microservicio tiene su propia base de datos en Docker.
 
 ## ✔ Distribución
 
@@ -75,11 +78,56 @@ Cada microservicio tiene su propia base de datos dentro de su contenedor Docker.
 - needs-service → needs-db
 - logistics-service → logistics-db
 
+---
+
+## 🔗 Conexión
+
+Los microservicios se conectan a su base de datos mediante el nombre del contenedor:
+
+```properties
+spring.datasource.url=jdbc:postgresql://auth-db:5432/auth_db
+```
+
+---
+
 ## ⚠️ Restricciones
 
 - No se comparten bases de datos
 - No existen relaciones entre bases de datos
-- Comunicación solo vía HTTP (REST)
+- Comunicación solo vía HTTP
+
+---
+
+## ✔ Beneficios
+
+- Bajo acoplamiento
+- Escalabilidad independiente
+- Aislamiento de fallos
+
+---
+
+# 🔄 Comunicación entre Servicios
+
+La comunicación se realiza mediante **HTTP REST** utilizando **Spring WebClient**.
+
+## ✔ WebClient
+
+- Cliente HTTP no bloqueante
+- Permite llamadas asincrónicas
+- Usado principalmente en el BFF
+
+---
+
+## 📌 Ejemplo
+
+```java
+WebClient webClient = WebClient.create("http://donations-service");
+
+webClient.get()
+    .uri("/donaciones")
+    .retrieve()
+    .bodyToMono(String.class);
+```
 
 ---
 
@@ -91,11 +139,11 @@ Encapsula acceso a datos.
 
 ### ✔ Factory Method
 
-Creación de recursos.
+Creación de objetos.
 
 ### ✔ Circuit Breaker (Resilience4j)
 
-Manejo de fallos.
+Manejo de fallos entre servicios.
 
 ---
 
@@ -118,8 +166,8 @@ Gestión de usuarios y autenticación mediante JWT.
 
 ## 🔗 Relaciones
 
-- Usuario es independiente (no tiene relaciones con otras entidades internas)
-- El rol se maneja como ENUM
+- Usuario independiente
+- Rol como ENUM
 
 ---
 
@@ -152,13 +200,13 @@ Gestión del ingreso de recursos.
 
 ### Donacion
 
-| Atributo    | Tipo                                  |
-| ----------- | ------------------------------------- |
-| id_donacion | PK                                    |
-| fecha       | Date                                  |
-| cantidad    | Integer                               |
-| estado      | ENUM (PENDIENTE, RECIBIDA, ENTREGADA) |
-| id_donante  | FK                                    |
+| Atributo    | Tipo    |
+| ----------- | ------- |
+| id_donacion | PK      |
+| fecha       | Date    |
+| cantidad    | Integer |
+| estado      | ENUM    |
+| id_donante  | FK      |
 
 ---
 
@@ -175,9 +223,9 @@ Gestión del ingreso de recursos.
 ## 🔗 Relaciones
 
 - Donante **1:N** Donacion
-- Donacion **N:M** Recurso (mediante Donacion_Recurso)
-- Recurso **1:N** Donacion_Recurso
+- Donacion **N:M** Recurso
 - Donacion **1:N** Donacion_Recurso
+- Recurso **1:N** Donacion_Recurso
 
 ---
 
@@ -185,19 +233,19 @@ Gestión del ingreso de recursos.
 
 ## 📌 Responsabilidad
 
-Registrar necesidades en terreno.
+Registrar necesidades.
 
 ## 🧩 Entidades
 
 ### Necesidad
 
-| Atributo     | Tipo                       |
-| ------------ | -------------------------- |
-| id_necesidad | PK                         |
-| cantidad     | Integer                    |
-| prioridad    | ENUM (ALTA, MEDIA, BAJA)   |
-| estado       | ENUM (PENDIENTE, CUBIERTA) |
-| id_ubicacion | FK                         |
+| Atributo     | Tipo    |
+| ------------ | ------- |
+| id_necesidad | PK      |
+| cantidad     | Integer |
+| prioridad    | ENUM    |
+| estado       | ENUM    |
+| id_ubicacion | FK      |
 
 ---
 
@@ -232,9 +280,9 @@ Registrar necesidades en terreno.
 ## 🔗 Relaciones
 
 - Necesidad **N:1** Ubicacion
-- Necesidad **N:M** Recurso (mediante Necesidad_Recurso)
-- Recurso **1:N** Necesidad_Recurso
+- Necesidad **N:M** Recurso
 - Necesidad **1:N** Necesidad_Recurso
+- Recurso **1:N** Necesidad_Recurso
 
 ---
 
@@ -269,12 +317,12 @@ Gestión de almacenamiento y distribución.
 
 ### Envio
 
-| Atributo  | Tipo                        |
-| --------- | --------------------------- |
-| id_envio  | PK                          |
-| fecha     | Date                        |
-| estado    | ENUM (EN_CAMINO, ENTREGADO) |
-| id_centro | FK                          |
+| Atributo  | Tipo |
+| --------- | ---- |
+| id_envio  | PK   |
+| fecha     | Date |
+| estado    | ENUM |
+| id_centro | FK   |
 
 ---
 
@@ -289,31 +337,31 @@ Gestión de almacenamiento y distribución.
 
 # 🔄 Git Flow
 
-## 🌿 Ramas principales
+## 🌿 Ramas
 
-- `main` → producción
-- `develop` → integración
+- main → producción
+- develop → integración
 
 ---
 
 ## 🌱 Flujo de trabajo
 
-1. Antes de comenzar una nueva funcionalidad:
+1. Antes de crear una feature:
 
 ```bash
 git checkout develop
 git pull origin develop
 ```
 
-2. Crear una nueva rama desde develop:
+2. Crear rama:
 
 ```bash
 git checkout -b feature/nombre-feature
 ```
 
-3. Desarrollar la funcionalidad y realizar commits
+3. Desarrollar
 
-4. Subir la rama:
+4. Subir cambios:
 
 ```bash
 git push origin feature/nombre-feature
@@ -321,40 +369,29 @@ git push origin feature/nombre-feature
 
 5. Crear Pull Request:
 
-- Desde `feature/*` hacia `develop`
-- Permite revisión de código antes de integrar
+- feature → develop
+- Permite revisión de código
 
-6. Una vez aprobado:
+6. Merge a develop
 
-- Se realiza merge hacia `develop`
+7. Cuando esté estable:
 
-7. Cuando `develop` esté estable:
-
-- Se realiza merge desde `develop` hacia `main`
+- merge develop → main
 
 ---
 
 ## 🎯 Objetivo
 
-- Mantener estabilidad en producción
-- Permitir desarrollo paralelo
-- Facilitar revisión de código
-- Evitar conflictos
-
----
-
-# 🔗 Comunicación entre Microservicios
-
-- HTTP REST
-- Orquestación mediante BFF
-- Gateway: KrakenD
+- Trabajo colaborativo
+- Control de versiones
+- Estabilidad
 
 ---
 
 # 🔒 Seguridad
 
 - JWT
-- Validación en API Gateway
+- Validación en KrakenD
 - Control de roles
 
 ---
@@ -365,32 +402,29 @@ Cada microservicio escala de forma independiente.
 
 ---
 
-# 🧠 Justificación del Modelo
-
-- Eliminación de entidades innecesarias
-- Uso de ENUM
-- Separación de responsabilidades
-- Bajo acoplamiento
-
----
-
 # 🚀 Tecnologías
 
 - Java 21
 - Spring Boot 3.3.x
+- Gradle (Groovy DSL)
 - PostgreSQL
 - Docker
 - KrakenD
 - React
 - TypeScript
-- Zustand
+- WebClient
 - Resilience4j
 
 ---
 
 # ✅ Conclusión
 
-El sistema implementa una arquitectura moderna basada en microservicios, permitiendo escalabilidad, mantenibilidad y desacoplamiento.
+La arquitectura permite construir un sistema:
+
+- Escalable
+- Desacoplado
+- Mantenible
+- Preparado para crecimiento
 
 ---
 
