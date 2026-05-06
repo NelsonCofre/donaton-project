@@ -1,0 +1,68 @@
+services:
+  postgres-auth:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: user_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/user_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+      JWT_SECRET: ${AUTH_SERVICE_JWT_SECRET:-default-local-auth-secret-minimum-32-characters-long!!}
+      APP_CORS_ALLOWED_ORIGINS: ${AUTH_SERVICE_CORS_ORIGIN:-http://localhost:5173}
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+
+  postgres-out:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: user_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-out-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  out-service:
+    build:
+      context: ./backend/out-service
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-out:5432/user_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+      JWT_SECRET: ${OUT_SERVICE_JWT_SECRET:-default-local-dev-secret-minimum-32-characters-long!!}
+      APP_CORS_ALLOWED_ORIGINS: ${OUT_SERVICE_CORS_ORIGIN:-http://localhost:5173}
+    depends_on:
+      postgres-out:
+        condition: service_healthy
+
+volumes:
+  postgres-auth-data:
+  postgres-out-data:
