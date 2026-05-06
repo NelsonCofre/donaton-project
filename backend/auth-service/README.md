@@ -7,7 +7,7 @@ Microservicio backend **solo autenticación**: **registro** y **login** (JWT). B
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | GET | `/health` | Estado del servicio |
-| POST | `/api/auth/register` | Registro (`email`, `password`, `name` opcional) → **201** |
+| POST | `/api/auth/register` | Registro (`email`, `password`, **`name` obligatorio**) → **201** |
 | POST | `/api/auth/login` | Login (`email`, `password`) → **200** + `{ user, token }` |
 
 JSON en **snake_case** (`created_at`, etc.).

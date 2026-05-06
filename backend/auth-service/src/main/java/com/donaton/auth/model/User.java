@@ -29,6 +29,7 @@ public class User {
 	@Column(name = "password_hash", nullable = false)
 	private String passwordHash;
 
+	@Column(nullable = false)
 	private String name;
 
 	@Column(name = "created_at", nullable = false, updatable = false)
