@@ -27,7 +27,7 @@ public class AuthService {
 			throw new ApiException(HttpStatus.CONFLICT, "El correo ya está registrado");
 		}
 		String hash = passwordEncoder.encode(request.password());
-		User user = new User(request.email(), hash, request.name().trim());
+		User user = new User(request.email(), hash, blankToNull(request.name()));
 		userRepository.save(user);
 		String token = jwtService.generateToken(user);
 		return new AuthResponse(UserResponse.from(user), token);
@@ -44,4 +44,7 @@ public class AuthService {
 		return new AuthResponse(UserResponse.from(user), token);
 	}
 
+	private static String blankToNull(String s) {
+		return (s == null || s.isBlank()) ? null : s.trim();
+	}
 }
