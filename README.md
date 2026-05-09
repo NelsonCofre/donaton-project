@@ -73,7 +73,7 @@ Se implementa el patrón **Database per Service**, donde cada microservicio tien
 
 ## ✔ Distribución
 
-- auth-service → auth_db
+- auth-service → auth-db
 - donations-service → donations-db
 - needs-service → needs-db
 - logistics-service → logistics-db
@@ -85,7 +85,7 @@ Se implementa el patrón **Database per Service**, donde cada microservicio tien
 Los microservicios se conectan a su base de datos mediante el nombre del contenedor:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://postgres-auth:5432/auth_db
+spring.datasource.url=jdbc:postgresql://auth-db:5432/auth-db
 ```
 
 ---
