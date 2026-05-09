@@ -106,6 +106,43 @@ spring.datasource.url=jdbc:postgresql://auth-db:5432/auth_db
 
 ---
 
+# 🛠️ Migraciones de Base de Datos con Flyway
+
+El proyecto utiliza **Flyway** para gestionar las migraciones de base de datos de cada microservicio.
+
+Flyway permite versionar los cambios de la base de datos mediante archivos SQL, evitando crear tablas manualmente en PostgreSQL.  
+Al iniciar cada microservicio, Spring Boot detecta Flyway, busca las migraciones pendientes y las ejecuta automáticamente sobre la base de datos correspondiente.
+
+---
+
+## ✔ ¿Para qué usamos Flyway?
+
+Flyway se utiliza para:
+
+- Crear las tablas iniciales de cada microservicio.
+- Versionar los cambios de la base de datos.
+- Evitar diferencias entre las bases de datos de los integrantes del equipo.
+- Permitir que el proyecto sea reproducible localmente.
+- Mantener controlado el historial de cambios de la base de datos.
+
+---
+
+## 🔄 Flujo de migración
+
+````txt
+Docker Compose levanta PostgreSQL
+↓
+Spring Boot inicia el microservicio
+↓
+Flyway detecta los archivos SQL
+↓
+Flyway ejecuta las migraciones pendientes
+↓
+PostgreSQL crea o actualiza las tablas
+↓
+Flyway registra el historial en flyway_schema_history
+
+
 # 🔄 Comunicación entre Servicios
 
 La comunicación se realiza mediante **HTTP REST** utilizando **Spring WebClient**.
@@ -127,7 +164,7 @@ webClient.get()
     .uri("/donaciones")
     .retrieve()
     .bodyToMono(String.class);
-```
+````
 
 ---
 
