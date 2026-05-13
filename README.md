@@ -451,6 +451,7 @@ Cada microservicio escala de forma independiente.
 - TypeScript
 - WebClient
 - Resilience4j
+- Flyway
 
 ---
 

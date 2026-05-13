@@ -1,0 +1,7 @@
+.gradle
+bin
+build
+.git
+.gitignore
+.gitattributes
+EXPLICACIÓN-TECNICA.md
