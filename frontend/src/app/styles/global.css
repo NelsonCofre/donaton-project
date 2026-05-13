@@ -1,0 +1,349 @@
+:root {
+  --text: #4b5563;
+  --text-h: #111827;
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --error: #b91c1c;
+  --error-bg: #fef2f2;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow-auth:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 12px 40px -12px rgba(15, 23, 42, 0.12);
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font: 16px/1.5 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #cbd5e1;
+    --text-h: #f8fafc;
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --border: #334155;
+    --error: #fca5a5;
+    --error-bg: #450a0a;
+    --accent: #60a5fa;
+    --accent-hover: #93c5fd;
+    --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+    --shadow-auth:
+      0 1px 2px rgba(0, 0, 0, 0.2),
+      0 16px 48px -12px rgba(0, 0, 0, 0.45);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+h1,
+h2 {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.125rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.donaton-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.donaton-nav__brand {
+  font-weight: 700;
+  color: var(--text-h);
+  margin-right: auto;
+  text-decoration: none;
+}
+
+.donaton-nav__brand:hover {
+  text-decoration: underline;
+}
+
+.donaton-nav a.active {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.donaton-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2rem;
+  width: 100%;
+  flex: 1;
+}
+
+.donaton-main--auth {
+  max-width: none;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 4vw, 3rem) 1.25rem;
+  min-height: 0;
+}
+
+.donaton-layout {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.donaton-layout--auth {
+  background:
+    radial-gradient(
+      ellipse 100% 80% at 50% -30%,
+      var(--accent-soft),
+      transparent 55%
+    ),
+    var(--bg);
+}
+
+.donaton-layout--auth .donaton-nav {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.donaton-auth-screen {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.donaton-auth-header {
+  margin-bottom: 1.5rem;
+}
+
+.donaton-auth-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.donaton-auth-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.5rem, 4vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.donaton-auth-subtitle {
+  margin: 0 auto;
+  max-width: 34ch;
+  line-height: 1.45;
+}
+
+.donaton-auth-switch {
+  margin: 1.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.donaton-auth-switch a {
+  font-weight: 600;
+}
+
+.donaton-card--auth {
+  margin: 0;
+  padding: clamp(1.35rem, 3vw, 1.85rem);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-auth);
+  border-color: color-mix(in srgb, var(--border) 85%, var(--accent) 8%);
+  text-align: left;
+}
+
+.donaton-main--auth .donaton-form {
+  max-width: none;
+  width: 100%;
+  gap: 1.1rem;
+}
+
+.donaton-main--auth .donaton-btn {
+  width: 100%;
+  margin-top: 0.15rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.donaton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.donaton-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 420px;
+}
+
+.donaton-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.donaton-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.donaton-field input,
+.donaton-field select {
+  min-height: 2.65rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-h);
+  font: inherit;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.donaton-field input:hover,
+.donaton-field select:hover {
+  border-color: color-mix(in srgb, var(--border) 55%, var(--text-h) 45%);
+}
+
+.donaton-field input:focus,
+.donaton-field select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.donaton-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+  transition: background 0.15s ease;
+}
+
+.donaton-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.donaton-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.donaton-alert {
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.donaton-alert--error {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid color-mix(in srgb, var(--error) 35%, transparent);
+}
+
+.donaton-table-wrap {
+  overflow-x: auto;
+}
+
+.donaton-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.donaton-table th,
+.donaton-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+}
+
+.donaton-table th {
+  background: color-mix(in srgb, var(--surface) 85%, var(--border));
+  color: var(--text-h);
+}
+
+.donaton-muted {
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.donaton-nav__logout {
+  margin-left: auto;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.donaton-nav__logout:hover {
+  background: var(--bg);
+}
