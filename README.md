@@ -386,8 +386,8 @@ Gestión de almacenamiento y distribución.
 1. Antes de crear una feature:
 
 ```bash
-git checkout develop
-git pull origin develop
+git checkout development
+git pull origin development
 ```
 
 2. Crear rama:
@@ -405,6 +405,10 @@ git push origin feature/nombre-feature
 ```
 
 5. Crear Pull Request:
+
+api/auth/register
+api/auth/login
+
 
 - feature → develop
 - Permite revisión de código
