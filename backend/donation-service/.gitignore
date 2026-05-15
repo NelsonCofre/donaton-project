@@ -1,4 +1,8 @@
 HELP.md
+
+# Credenciales y overrides locales (12-factor); no subir a Git
+.env
+
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
