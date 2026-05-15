@@ -67,6 +67,14 @@ Cada componente se ejecuta en su propio contenedor:
 - Microservicios
 - Bases de datos
 
+Actualmente el `docker-compose.yml` raíz levanta el stack integrado local con:
+
+- frontend
+- auth-service
+- postgres-auth
+- donation-service
+- postgres-donation
+
 ---
 
 ## ⚙️ Ejecutar con Docker Compose (raíz del repositorio)

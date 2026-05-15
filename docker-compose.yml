@@ -61,16 +61,17 @@ services:
 
   postgres-donation:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: donation
-      POSTGRES_PASSWORD: donation
-      POSTGRES_DB: donation_db
+      POSTGRES_USER: ${POSTGRES_USER:-donation}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-donation}
+      POSTGRES_DB: ${POSTGRES_DB:-donation_db}
     ports:
-      - "5436:5432"
+      - "${POSTGRES_PUBLISH_PORT:-5436}:5432"
     volumes:
-      - postgres-donation-data:/var/lib/postgresql/data
+      - donation-pg-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U donation -d donation_db"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -80,19 +81,23 @@ services:
     build:
       context: ./backend/donation-service
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-      - "8082:8082"
+      - "${DONATION_SERVICE_PORT:-8082}:${SERVER_PORT:-8082}"
     environment:
-      SERVER_PORT: 8082
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-donation:5432/donation_db
-      SPRING_DATASOURCE_USERNAME: donation
-      SPRING_DATASOURCE_PASSWORD: donation
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: ${SERVER_PORT:-8082}
+      SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME:-donation-service}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-donation:5432/${POSTGRES_DB:-donation_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-donation}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-donation}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}
+      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
+      SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
     depends_on:
       postgres-donation:
         condition: service_healthy
 
 volumes:
   postgres-auth-data:
-  postgres-donation-data:
+  donation-pg-data:

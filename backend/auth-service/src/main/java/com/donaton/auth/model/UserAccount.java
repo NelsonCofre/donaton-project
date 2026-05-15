@@ -28,7 +28,7 @@ public class UserAccount {
 	@Column(nullable = false, unique = true, length = 150)
 	private String email;
 
-	@Column(nullable = false)
+	@Column(name = "password_hash", nullable = false)
 	private String passwordHash;
 
 	@Enumerated(EnumType.STRING)
@@ -38,10 +38,10 @@ public class UserAccount {
 	@Column(nullable = false)
 	private boolean enabled;
 
-	@Column(nullable = false, updatable = false)
+	@Column(name = "created_at", nullable = false, updatable = false)
 	private OffsetDateTime createdAt;
 
-	@Column(nullable = false)
+	@Column(name = "updated_at", nullable = false)
 	private OffsetDateTime updatedAt;
 
 	@PrePersist
