@@ -1,4 +1,5 @@
 import { env } from '@/shared/config/env'
+import { AUTH_LOGOUT_EVENT } from '@/shared/lib/authEvents'
 import { clearStoredToken, getStoredToken } from '@/shared/lib/authStorage'
 
 export class ApiError extends Error {
@@ -53,6 +54,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (res.status === 401) {
     clearStoredToken()
+    window.dispatchEvent(new Event(AUTH_LOGOUT_EVENT))
   }
 
   if (!res.ok) {

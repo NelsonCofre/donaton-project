@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { getStoredToken } from '@/shared/lib/authStorage'
+import { useAuth } from '@/shared/lib/useAuth'
 
 type ProtectedRouteProps = {
   children: ReactNode
@@ -8,8 +8,11 @@ type ProtectedRouteProps = {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation()
-  if (!getStoredToken()) {
+  const { isAuthenticated } = useAuth()
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
+
   return children
 }
