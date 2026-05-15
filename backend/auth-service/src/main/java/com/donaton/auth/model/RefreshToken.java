@@ -32,13 +32,13 @@ public class RefreshToken {
 	@JoinColumn(name = "user_id", nullable = false)
 	private UserAccount user;
 
-	@Column(nullable = false)
+	@Column(name = "expires_at", nullable = false)
 	private OffsetDateTime expiresAt;
 
 	@Column(nullable = false)
 	private boolean revoked;
 
-	@Column(nullable = false, updatable = false)
+	@Column(name = "created_at", nullable = false, updatable = false)
 	private OffsetDateTime createdAt;
 
 	@PrePersist

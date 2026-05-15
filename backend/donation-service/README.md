@@ -1,16 +1,16 @@
 # Donation Service (Donaton)
 
-Microservicio **Spring Boot** del caso Donaton: **CRUD de donaciones** (recurso, cantidad, origen, fecha, centro de acopio), persistencia en **PostgreSQL** con **JPA** y **Flyway**, exposición **REST** y despliegue local con **Docker Compose** (sin API Gateway ni pgAdmin).
+Microservicio **Spring Boot** del caso Donaton: **CRUD de donaciones** (recurso, cantidad, origen, fecha, centro de acopio), persistencia en **PostgreSQL** con **JPA** y **Flyway**, exposición **REST** y despliegue local con **Docker Compose** desde la **raíz del proyecto** (sin API Gateway ni pgAdmin).
 
 ---
 
 ## Inicio rápido
 
-Desde la carpeta **`backend/donation-service`**:
+Desde la **raíz del monorepo**:
 
 | Objetivo | Comando | Resultado |
 |----------|---------|-----------|
-| **Ejecutar** (API + Postgres en Docker) | `docker compose up --build` | API en `http://localhost:8082` |
+| **Ejecutar** (stack integrado desde la raíz) | `docker compose up --build donation-service postgres-donation` | API en `http://localhost:8082` |
 | **Probar** (tests automatizados) | `gradlew.bat test` (Windows) o `./gradlew test` | Tests JUnit/MockMvc con H2 |
 | **Probar** (CRUD manual + BD) | Ver [Pruebas manuales y consola Docker](#pruebas-manuales-y-consola-docker) | `curl` + `psql` vía `docker compose exec` |
 
@@ -94,14 +94,14 @@ Cuerpo JSON de entrada/salida (campos):
 
 ### Con Docker (recomendado)
 
-1. Opcional: archivo **`.env`** en esta carpeta (no se versiona) para puertos/credenciales; si no existe, se usan los defaults de `docker-compose.yml`.
+1. Opcional: archivo **`.env`** en la **raíz del proyecto** (no se versiona) para puertos/credenciales; si no existe, se usan los defaults de `docker-compose.yml`.
 2. Levantar stack:
 
    ```bash
-   docker compose up --build
+   docker compose up --build donation-service postgres-donation
    ```
 
-   En segundo plano: `docker compose up --build -d`
+   En segundo plano: `docker compose up --build -d donation-service postgres-donation`
 
 3. **API:** `http://localhost:8082` (variable `DONATION_SERVICE_PORT` en host).
 4. **Postgres en el host:** puerto **5436** por defecto (`POSTGRES_PUBLISH_PORT`).
@@ -142,7 +142,7 @@ Guía para demostrar el CRUD con el stack levantado y comprobar datos en Postgre
 #### 1. Preparación
 
 ```bash
-docker compose up --build -d
+docker compose up --build -d donation-service postgres-donation
 docker compose ps
 ```
 
@@ -212,14 +212,14 @@ docker compose logs -f donation-service
 
 ### Diseño de contenedores
 
-Dos servicios en **`docker-compose.yml`** (proyecto Compose: `donation-service-stack`):
+Dos servicios definidos ahora en el **`docker-compose.yml` raíz** del proyecto:
 
 | Servicio | Rol |
 |----------|-----|
 | `postgres-donation` | PostgreSQL 16, volumen `donation-pg-data`, healthcheck `pg_isready` |
 | `donation-service` | API Spring Boot (imagen desde `Dockerfile`) |
 
-- **Red:** `donation-net` (bridge); JDBC usa host `postgres-donation`.
+- **Red:** usa la red por defecto del compose raíz; JDBC usa host `postgres-donation`.
 - **Arranque:** la app espera Postgres **healthy** (`depends_on`).
 - **Runtime:** JAR como usuario **`nobody`** (no root).
 
@@ -239,7 +239,8 @@ docker build -t donation-service:local .
 ### Docker Compose (comandos)
 
 ```bash
-docker compose up --build -d    # levantar
+docker compose up --build -d donation-service postgres-donation   # levantar solo este stack
+docker compose up --build -d    # levantar todo el sistema desde la raíz
 docker compose ps             # estado
 docker compose logs -f donation-service
 docker compose down           # parar (conserva volumen)
@@ -262,7 +263,7 @@ Si editas una migración ya aplicada en Docker, usa `docker compose down -v` y v
 
 ## Configuración y variables de entorno
 
-Enfoque **12-factor**: configuración por **variables de entorno** (`application.properties` con placeholders; Compose inyecta valores en contenedor). Archivo **`.env`** opcional en esta carpeta (en `.gitignore`).
+Enfoque **12-factor**: configuración por **variables de entorno** (`application.properties` con placeholders; Compose inyecta valores en contenedor). Archivo **`.env`** opcional en la **raíz del proyecto** (Compose lo lee automáticamente).
 
 ### Aplicación (Spring)
 
@@ -316,7 +317,7 @@ Enfoque **12-factor**: configuración por **variables de entorno** (`application
 | Negocio | `service/` |
 | Contratos | `dto/` |
 | Config | `application.properties`, `config/SecurityConfiguration.java` |
-| Contenedores | `Dockerfile`, `docker-compose.yml` |
+| Contenedores | `Dockerfile`, `../../docker-compose.yml` |
 | Build | `build.gradle`, `settings.gradle`, `gradlew` |
 | Tests | `src/test/java/...`, `application-test.properties` |
 

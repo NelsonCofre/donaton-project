@@ -348,17 +348,49 @@ Mapeo principal:
 
 ## 9. Persistencia y decisiones sobre base de datos
 
-No se incorporaron componentes adicionales de infraestructura en esta etapa.
+El servicio mantiene PostgreSQL como base principal, pero la evolución del esquema ahora quedó formalizada con **Flyway**.
 
-Para permitir que el servicio arranque y persista entidades en desarrollo:
+### 9.1 Estrategia actual
 
-- se mantuvo PostgreSQL como base principal,
-- `spring.jpa.hibernate.ddl-auto=update` crea o ajusta tablas automáticamente en ejecución.
+- Flyway crea y versiona las tablas del servicio.
+- Hibernate ya no modifica el esquema automáticamente en runtime.
+- `spring.jpa.hibernate.ddl-auto=validate` se usa para comprobar que el esquema existente coincide con las entidades JPA.
 
-Importante:
+Con esto se separan responsabilidades:
 
-- Esto facilita el desarrollo del microservicio en esta etapa.
-- En una evolución productiva, lo recomendable es formalizar la evolución del esquema con una estrategia versionada.
+- **Flyway** controla la estructura y evolución de base de datos.
+- **Hibernate** valida compatibilidad entre código y base.
+
+### 9.2 Migraciones incluidas
+
+Las migraciones se ubican en:
+
+- `src/main/resources/db/migration`
+
+Migraciones iniciales:
+
+- `V1__create_auth_tables.sql`
+  - crea `users`
+  - crea `refresh_tokens`
+  - crea `blacklisted_tokens`
+  - agrega unicidad en `email` y `token`
+  - crea la FK `refresh_tokens.user_id -> users.id`
+- `V2__add_auth_indexes.sql`
+  - agrega índice por `user_id` en `refresh_tokens`
+  - agrega índice por expiración en `refresh_tokens`
+  - agrega índice por expiración en `blacklisted_tokens`
+
+### 9.3 Cómo levantar el servicio sobre una base vacía
+
+Flujo esperado:
+
+1. PostgreSQL inicia con una base vacía.
+2. Spring Boot arranca el `auth-service`.
+3. Flyway detecta las migraciones pendientes.
+4. Flyway crea el esquema e inserta el historial en `flyway_schema_history`.
+5. Hibernate valida el resultado antes de exponer el servicio.
+
+Esto deja el arranque reproducible para todos los integrantes del equipo y evita depender de creación manual de tablas.
 
 ## 10. Configuración relevante
 
@@ -368,18 +400,26 @@ Propiedades principales:
 - `security.jwt.access-token-expiration-minutes`
 - `security.jwt.refresh-token-expiration-days`
 - `spring.datasource.*`
+- `spring.flyway.enabled`
+- `spring.flyway.locations`
 
 Se dejaron con soporte para variables de entorno y valores por defecto razonables.
 
 ## 11. Pruebas
 
-Se agregó configuración de test con H2 en memoria para que el contexto de Spring levante sin depender de PostgreSQL externo.
+Se mantiene configuración de test con H2 en memoria para que el contexto de Spring levante sin depender de PostgreSQL externo.
 
 Objetivo:
 
 - permitir compilación,
 - validar wiring de beans,
 - evitar acoplar pruebas básicas a infraestructura externa.
+
+Decisión para esta iteración:
+
+- en tests, Flyway queda desactivado,
+- Hibernate crea el esquema temporal con `create-drop`,
+- las migraciones versionadas quedan orientadas al runtime principal sobre PostgreSQL.
 
 El `build` del microservicio quedó pasando correctamente con Gradle.
 
