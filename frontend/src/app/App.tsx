@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { DonationsPage } from '@/pages/donations'
 import { LoginPage } from '@/pages/login'
 import { RegisterPage } from '@/pages/register'
+import { AuthProvider } from '@/shared/lib/authContext'
 import { MainLayout } from './layouts/MainLayout'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 
@@ -30,5 +31,9 @@ const router = createBrowserRouter([
 ])
 
 export function App() {
-  return <RouterProvider router={router} />
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  )
 }

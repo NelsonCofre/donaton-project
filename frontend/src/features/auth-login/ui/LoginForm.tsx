@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { ApiError } from '@/shared/api/client'
 import { login } from '@/entities/user'
-import { setStoredToken } from '@/shared/lib/authStorage'
+import { useAuth } from '@/shared/lib/useAuth'
 
 type LoginFormProps = {
   onSuccess: () => void
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
+  const { setToken } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -19,7 +20,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     setLoading(true)
     try {
       const res = await login({ email: email.trim(), password })
-      setStoredToken(res.token)
+      setToken(res.token)
       onSuccess()
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo iniciar sesión.')

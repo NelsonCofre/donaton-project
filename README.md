@@ -15,7 +15,9 @@ El frontend está desarrollado en **React + TypeScript** y el backend en **Java 
 
 ## 🔷 Flujo de comunicación
 
-Frontend → BFF → API Gateway (KrakenD) → Microservicios
+**Documentación / objetivo:** Frontend → BFF → API Gateway (KrakenD) → Microservicios.
+
+**Implementación actual en `docker-compose.yml`:** el navegador solo habla con el **frontend** y el **BFF**; el BFF llama por HTTP a **auth-service** y **donation-service** (sin KrakenD en este compose; el gateway puede incorporarse después).
 
 ---
 
@@ -64,6 +66,31 @@ Cada componente se ejecuta en su propio contenedor:
 - KrakenD
 - Microservicios
 - Bases de datos
+
+---
+
+## ⚙️ Ejecutar con Docker Compose (raíz del repositorio)
+
+El **Backend for Frontend (BFF)** está en `backend/bff-service`: expone la API que consume el cliente (`/api/auth/*`, `/api/donations`), valida el JWT donde aplica y actúa como cliente HTTP hacia los microservicios.
+
+Desde la raíz del proyecto:
+
+```bash
+docker compose up --build
+```
+
+| Servicio | Puerto en el host | Rol |
+|----------|-------------------|-----|
+| `frontend` | **5173** | UI estática servida con Nginx (`http://localhost:5173`) |
+| `bff-service` | **8080** | BFF Spring Boot: única API HTTP para el navegador |
+| `auth-service` | **8081** | Autenticación y emisión de JWT |
+| `donation-service` | **8082** | CRUD de donaciones |
+| `postgres-auth` | **5435** | Base de datos del auth-service |
+| `postgres-donation` | **5436** | Base de datos del donation-service |
+
+**Variable del front (build):** la imagen del frontend inyecta la URL del BFF en tiempo de **build** con `VITE_API_BASE_URL` (por defecto `http://localhost:8080` en `docker-compose.yml`). Si cambias el host o puerto del BFF, reconstruye el servicio `frontend` con el valor correcto para que el navegador pueda llamarlo.
+
+**CORS:** el BFF admite orígenes configurables (`APP_CORS_ALLOWED_ORIGINS`); alinealo con la URL desde la que sirves el frontend.
 
 ---
 
@@ -129,7 +156,7 @@ Flyway se utiliza para:
 
 ## 🔄 Flujo de migración
 
-````txt
+```txt
 Docker Compose levanta PostgreSQL
 ↓
 Spring Boot inicia el microservicio
@@ -141,7 +168,7 @@ Flyway ejecuta las migraciones pendientes
 PostgreSQL crea o actualiza las tablas
 ↓
 Flyway registra el historial en flyway_schema_history
-
+```
 
 # 🔄 Comunicación entre Servicios
 
@@ -164,7 +191,7 @@ webClient.get()
     .uri("/donaciones")
     .retrieve()
     .bodyToMono(String.class);
-````
+```
 
 ---
 

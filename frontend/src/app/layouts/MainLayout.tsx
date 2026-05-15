@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { clearStoredToken, getStoredToken } from '@/shared/lib/authStorage'
+import { useAuth } from '@/shared/lib/useAuth'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? 'active' : undefined
@@ -9,11 +9,11 @@ const PUBLIC_AUTH_PATHS = ['/', '/login', '/register'] as const
 export function MainLayout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const token = getStoredToken()
+  const { isAuthenticated, clearToken } = useAuth()
   const path = location.pathname
 
   if (
-    token &&
+    isAuthenticated &&
     (PUBLIC_AUTH_PATHS as readonly string[]).includes(path)
   ) {
     return <Navigate to="/donaciones" replace />
@@ -21,18 +21,21 @@ export function MainLayout() {
 
   const isAuthPage = path === '/login' || path === '/register'
 
+  function handleLogout() {
+    clearToken()
+    navigate('/login', { replace: true })
+  }
+
   return (
-    <div
-      className={`donaton-layout${isAuthPage ? ' donaton-layout--auth' : ''}`}
-    >
+    <div className={`donaton-layout${isAuthPage ? ' donaton-layout--auth' : ''}`}>
       <header className="donaton-nav">
         <NavLink
-          to={token ? '/donaciones' : '/login'}
+          to={isAuthenticated ? '/donaciones' : '/login'}
           className="donaton-nav__brand"
         >
           Donaton
         </NavLink>
-        {token ? (
+        {isAuthenticated ? (
           <>
             <NavLink to="/donaciones" className={linkClass} end>
               Donaciones
@@ -40,10 +43,7 @@ export function MainLayout() {
             <button
               type="button"
               className="donaton-nav__logout"
-              onClick={() => {
-                clearStoredToken()
-                navigate('/login', { replace: true })
-              }}
+              onClick={handleLogout}
             >
               Cerrar sesión
             </button>
