@@ -5,4 +5,10 @@ export type {
   Donante,
   Recurso,
 } from './model/types'
-export { createDonacion, fetchDonaciones } from './api/donationApi'
+export {
+  createDonacion,
+  deleteDonacion,
+  fetchDonacionById,
+  fetchDonaciones,
+  updateDonacion,
+} from './api/donationApi'
