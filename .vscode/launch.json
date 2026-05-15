@@ -2,6 +2,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "DonationServiceApplication",
+      "request": "launch",
+      "mainClass": "com.donaton.donation.DonationServiceApplication",
+      "projectName": "donation-service"
+    },
+    {
+      "type": "java",
       "name": "Spring Boot-AuthServiceApplication<auth-service>",
       "request": "launch",
       "cwd": "${workspaceFolder}",
