@@ -494,6 +494,93 @@ Cada microservicio escala de forma independiente.
 
 ---
 
+# Requerimientos funcionales
+
+Describen qué debe hacer el sistema en relación con la ayuda humanitaria y la gestión operativa de donaciones, necesidades y logística.
+
+## Plataforma general
+
+- Permitir registrar y dar seguimiento a donaciones de recursos.
+- Permitir registrar necesidades en terreno asociadas a ubicaciones y recursos.
+- Permitir coordinar la logística de almacenamiento y distribución (centros, inventario, envíos).
+
+## Autenticación y usuarios (auth-service)
+
+- Gestionar usuarios con identificación por correo electrónico y contraseña.
+- Asignar roles (ADMIN, USER) para distinguir permisos de uso.
+- Autenticar credenciales y emitir tokens JWT para sesiones de API.
+- Validar el JWT en las rutas protegidas según el diseño de seguridad (BFF y/o API Gateway).
+
+## Donaciones (donation-service)
+
+- Administrar donantes (datos de contacto y nombre).
+- Administrar el catálogo de recursos (tipo de recurso).
+- Registrar donaciones con fecha, cantidad, estado y relación con el donante.
+- Asociar cada donación con uno o más recursos según el modelo de dominio.
+
+## Necesidades (needs-service)
+
+- Registrar necesidades con cantidad, prioridad y estado.
+- Vincular necesidades a una ubicación y a los recursos requeridos.
+
+## Logística (logistics-service)
+
+- Gestionar centros de acopio (identificación y ubicación).
+- Mantener inventario por centro (recurso y cantidad disponible).
+- Registrar envíos con fecha, estado y centro involucrado.
+
+## Cliente web (frontend y BFF)
+
+- Exponer al navegador una API consolidada vía el BFF (por ejemplo rutas de autenticación y donaciones), reduciendo acoplamiento del front con múltiples microservicios.
+- Orquestar en el BFF las llamadas HTTP a los microservicios y adaptar las respuestas a las necesidades de la interfaz.
+
+## Integración entre servicios
+
+- Comunicar dominios únicamente por HTTP/REST, sin compartir bases de datos entre microservicios.
+
+
+
+# Requerimientos no funcionales
+
+Describen cómo debe comportarse el sistema (calidades, restricciones técnicas y operativas), más allá de las funciones de negocio.
+
+## Arquitectura y despliegue
+
+- Implementar arquitectura de microservicios separada por dominio (autenticación, donaciones, necesidades, logística).
+- Contenerizar cada componente con Docker y permitir orquestación local mediante Docker Compose.
+- Aplicar el patrón Database per Service: cada microservicio con su propia instancia/base PostgreSQL, sin relaciones entre bases de datos de otros servicios.
+
+## API y experiencia de cliente
+
+- Utilizar un Backend for Frontend (BFF) como punto de entrada HTTP para el navegador, con CORS configurable según el origen del frontend.
+- Contemplar un API Gateway (KrakenD) para enrutamiento centralizado y validación de JWT a nivel de entrada (según el despliegue elegido).
+
+## Seguridad
+
+- Autenticación basada en JWT (stateless).
+- Autorización por roles para operaciones sensibles o administrativas.
+
+## Resiliencia y rendimiento de integración
+
+- Usar cliente HTTP no bloqueante (WebClient) en la orquestación del BFF.
+- Incorporar patrón Circuit Breaker (Resilience4j) para degradación controlada ante fallos entre servicios.
+
+## Datos y reproducibilidad
+
+- Versionar el esquema de cada base con Flyway, ejecutando migraciones al iniciar cada servicio para entornos reproducibles.
+
+## Escalabilidad y mantenibilidad
+
+- Permitir escalar servicios de forma independiente según la carga de cada dominio.
+- Mantener bajo acoplamiento entre equipos y componentes y aislar fallos entre microservicios.
+
+## Stack tecnológico
+
+- Backend en Java 21 y Spring Boot; construcción con Gradle (Groovy DSL).
+- Frontend en React y TypeScript.
+- Persistencia en PostgreSQL por servicio.
+
+
 # ✅ Conclusión
 
 La arquitectura permite construir un sistema:
