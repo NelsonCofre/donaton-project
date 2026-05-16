@@ -2,6 +2,81 @@
 
 ---
 
+## ⚙️ Ejecutar con Docker Compose (raíz del repositorio)
+
+El **Backend for Frontend (BFF)** está en `backend/bff-service`: expone la API que consume el cliente (`/api/auth/*`, `/api/donations`), valida el JWT donde aplica y actúa como cliente HTTP hacia los microservicios.
+
+### Requisitos
+
+- Docker Desktop o Docker Engine con Docker Compose habilitado.
+- Ejecutar los comandos desde la carpeta raíz del repositorio.
+
+### Levantar el entorno
+
+Desde la raíz del proyecto:
+
+```bash
+docker compose up --build
+```
+
+En segundo plano:
+
+```bash
+docker compose up --build -d
+```
+
+### Servicios y puertos
+
+| Servicio | Puerto en el host | Rol |
+|----------|-------------------|-----|
+| `frontend` | **5173** | UI estática servida con Nginx (`http://localhost:5173`) |
+| `bff-service` | **8080** | BFF Spring Boot: única API HTTP para el navegador |
+| `auth-service` | **8081** | Autenticación y emisión de JWT |
+| `donation-service` | **8082** | CRUD de donaciones |
+| `postgres-auth` | **5435** | Base de datos del auth-service |
+| `postgres-donation` | **5436** | Base de datos del donation-service |
+
+### Flujo recomendado
+
+1. Ejecutar `docker compose up --build`.
+2. Abrir el frontend en `http://localhost:5173`.
+3. El frontend consume el BFF en `http://localhost:8080`.
+4. El BFF reenvía las solicitudes a:
+   - `auth-service` para login, registro y validación de token.
+   - `donation-service` para el CRUD de donaciones.
+
+### Comandos útiles
+
+Revisar el estado de los contenedores:
+
+```bash
+docker compose ps
+```
+
+Ver logs de un servicio:
+
+```bash
+docker compose logs -f bff-service
+```
+
+Detener el entorno:
+
+```bash
+docker compose down
+```
+
+Detener y eliminar volúmenes:
+
+```bash
+docker compose down -v
+```
+
+**Variable del front (build):** la imagen del frontend inyecta la URL del BFF en tiempo de **build** con `VITE_API_BASE_URL` (por defecto `http://localhost:8080` en `docker-compose.yml`). Si cambias el host o puerto del BFF, reconstruye el servicio `frontend` con el valor correcto para que el navegador pueda llamarlo.
+
+**CORS:** el BFF admite orígenes configurables (`APP_CORS_ALLOWED_ORIGINS`); alinealo con la URL desde la que sirves el frontend.
+
+---
+
 ## 🧩 Descripción del Proyecto
 
 Donaton es una plataforma orientada a la gestión de ayuda humanitaria, permitiendo registrar donaciones, necesidades en terreno y coordinar la logística de distribución.
@@ -74,31 +149,6 @@ Actualmente el `docker-compose.yml` raíz levanta el stack integrado local con:
 - postgres-auth
 - donation-service
 - postgres-donation
-
----
-
-## ⚙️ Ejecutar con Docker Compose (raíz del repositorio)
-
-El **Backend for Frontend (BFF)** está en `backend/bff-service`: expone la API que consume el cliente (`/api/auth/*`, `/api/donations`), valida el JWT donde aplica y actúa como cliente HTTP hacia los microservicios.
-
-Desde la raíz del proyecto:
-
-```bash
-docker compose up --build
-```
-
-| Servicio | Puerto en el host | Rol |
-|----------|-------------------|-----|
-| `frontend` | **5173** | UI estática servida con Nginx (`http://localhost:5173`) |
-| `bff-service` | **8080** | BFF Spring Boot: única API HTTP para el navegador |
-| `auth-service` | **8081** | Autenticación y emisión de JWT |
-| `donation-service` | **8082** | CRUD de donaciones |
-| `postgres-auth` | **5435** | Base de datos del auth-service |
-| `postgres-donation` | **5436** | Base de datos del donation-service |
-
-**Variable del front (build):** la imagen del frontend inyecta la URL del BFF en tiempo de **build** con `VITE_API_BASE_URL` (por defecto `http://localhost:8080` en `docker-compose.yml`). Si cambias el host o puerto del BFF, reconstruye el servicio `frontend` con el valor correcto para que el navegador pueda llamarlo.
-
-**CORS:** el BFF admite orígenes configurables (`APP_CORS_ALLOWED_ORIGINS`); alinealo con la URL desde la que sirves el frontend.
 
 ---
 

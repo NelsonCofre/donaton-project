@@ -1,4 +1,4 @@
-package com.donaton.donation.entity;
+package com.donaton.donation.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -2,8 +2,8 @@ package com.donaton.donation.service;
 
 import com.donaton.donation.dto.DonationRequestDto;
 import com.donaton.donation.dto.DonationResponseDto;
-import com.donaton.donation.entity.Donation;
 import com.donaton.donation.exception.ResourceNotFoundException;
+import com.donaton.donation.model.Donation;
 import com.donaton.donation.repository.DonationRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
