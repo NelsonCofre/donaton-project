@@ -7,10 +7,34 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencias y salida de build
 node_modules
 dist
 dist-ssr
+
+# Variables de entorno (secretos); mantener solo plantillas versionadas
+.env
+.env.*
+!.env.example
+
+# Archivos locales sueltos (editores, overrides)
 *.local
+
+# TypeScript / Vite (artefactos y cachés)
+*.tsbuildinfo
+.vite
+vite.config.*.timestamp-*
+
+# ESLint
+.eslintcache
+
+# Tests / cobertura
+coverage
+
+# Cachés de bundlers u otras herramientas
+.cache
+.parcel-cache
+.turbo
 
 # Editor directories and files
 .vscode/*
