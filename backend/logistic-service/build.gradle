@@ -7,9 +7,11 @@ plugins {
 group = 'com.donaton'
 version = '0.0.1-SNAPSHOT'
 
+def jdkToolchainMajor = (findProperty('jdkToolchainVersion') ?: '21').toString().toInteger()
+
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(jdkToolchainMajor)
 	}
 }
 

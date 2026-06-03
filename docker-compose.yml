@@ -98,6 +98,46 @@ services:
       postgres-donation:
         condition: service_healthy
 
+  postgres-logistics:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${LOGISTICS_POSTGRES_USER:-logistic}
+      POSTGRES_PASSWORD: ${LOGISTICS_POSTGRES_PASSWORD:-logistic}
+      POSTGRES_DB: ${LOGISTICS_POSTGRES_DB:-logistics_db}
+    ports:
+      - "${LOGISTICS_POSTGRES_PUBLISH_PORT:-5437}:5432"
+    volumes:
+      - logistics-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  logistics-service:
+    build:
+      context: ./backend/logistic-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${LOGISTICS_SERVICE_PORT:-8084}:${LOGISTICS_SERVER_PORT:-8084}"
+    environment:
+      SERVER_PORT: ${LOGISTICS_SERVER_PORT:-8084}
+      SPRING_APPLICATION_NAME: ${LOGISTICS_SPRING_APPLICATION_NAME:-logistics-service}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-logistics:5432/${LOGISTICS_POSTGRES_DB:-logistics_db}
+      SPRING_DATASOURCE_USERNAME: ${LOGISTICS_POSTGRES_USER:-logistic}
+      SPRING_DATASOURCE_PASSWORD: ${LOGISTICS_POSTGRES_PASSWORD:-logistic}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}
+      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
+      SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
+    depends_on:
+      postgres-logistics:
+        condition: service_healthy
+
 volumes:
   postgres-auth-data:
   donation-pg-data:
+  logistics-pg-data:
