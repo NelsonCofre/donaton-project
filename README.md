@@ -1,6 +1,65 @@
-# 📦 Donaton - Arquitectura de Microservicios (Informe Evaluación 2)
+# 📦 Donaton - Arquitectura de Microservicios
 
----
+## 🧩 Descripción del Proyecto
+
+Donaton es una plataforma orientada a la gestión de ayuda humanitaria, permitiendo registrar donaciones, necesidades en terreno y coordinar la logística de distribución.
+
+El sistema implementa una arquitectura de **microservicios contenedorizados con Docker**, incorporando un **Backend for Frontend (BFF)** y un **API Gateway (KrakenD)**.
+El frontend está desarrollado en **React + TypeScript** y el backend en **Java 21 con Spring Boot**, utilizando **Gradle (Groovy DSL)** como herramienta de construcción.
+
+## 🏗️ Arquitectura del Sistema
+
+### 🔷 Flujo de comunicación
+
+**Documentación / objetivo:** Frontend → BFF → API Gateway (KrakenD) → Microservicios.
+
+**Implementación actual en `docker-compose.yml`:** el navegador solo habla con el **frontend** y el **BFF**; el BFF llama por HTTP a **auth-service** y **donation-service** (sin KrakenD en este compose; el gateway puede incorporarse después).
+
+### 🧱 Patrones Arquitectónicos
+
+#### ✔ Microservicios
+
+Separación por dominios:
+
+- auth-service
+- donations-service
+- needs-service
+- logistics-service
+
+#### ✔ API Gateway Pattern (KrakenD)
+
+- Enrutamiento de solicitudes
+- Seguridad (validación JWT)
+- Centralización de acceso
+
+#### ✔ Backend for Frontend (BFF)
+
+- Orquesta múltiples microservicios
+- Reduce llamadas desde frontend
+- Adapta respuestas a la UI
+- Utiliza **WebClient** para comunicación entre servicios
+
+#### ✔ Database per Service
+
+Cada microservicio posee su propia base de datos independiente, evitando el acoplamiento.
+
+## 🐳 Contenerización con Docker
+
+Cada componente se ejecuta en su propio contenedor:
+
+- Frontend
+- BFF
+- KrakenD
+- Microservicios
+- Bases de datos
+
+Actualmente el `docker-compose.yml` raíz levanta el stack integrado local con:
+
+- frontend
+- auth-service
+- postgres-auth
+- donation-service
+- postgres-donation
 
 ## ⚙️ Ejecutar con Docker Compose (raíz del repositorio)
 
@@ -190,16 +249,14 @@ Con `docker compose up --build` se levantan todos los servicios anteriores. Para
 
 Se implementa el patrón **Database per Service**, donde cada microservicio tiene su propia base de datos en Docker.
 
-## ✔ Distribución
+### ✔ Distribución
 
 - auth-service → auth-db
 - donations-service → donations-db
 - needs-service → needs-db
 - logistics-service → logistics-db
 
----
-
-## 🔗 Conexión
+### 🔗 Conexión
 
 Los microservicios se conectan a su base de datos mediante el nombre del contenedor:
 
@@ -207,34 +264,26 @@ Los microservicios se conectan a su base de datos mediante el nombre del contene
 spring.datasource.url=jdbc:postgresql://auth-db:5432/auth-db
 ```
 
----
-
-## ⚠️ Restricciones
+### ⚠️ Restricciones
 
 - No se comparten bases de datos
 - No existen relaciones entre bases de datos
 - Comunicación solo vía HTTP
 
----
-
-## ✔ Beneficios
+### ✔ Beneficios
 
 - Bajo acoplamiento
 - Escalabilidad independiente
 - Aislamiento de fallos
 
----
-
-# 🛠️ Migraciones de Base de Datos con Flyway
+## 🛠️ Migraciones de Base de Datos con Flyway
 
 El proyecto utiliza **Flyway** para gestionar las migraciones de base de datos de cada microservicio.
 
 Flyway permite versionar los cambios de la base de datos mediante archivos SQL, evitando crear tablas manualmente en PostgreSQL.  
 Al iniciar cada microservicio, Spring Boot detecta Flyway, busca las migraciones pendientes y las ejecuta automáticamente sobre la base de datos correspondiente.
 
----
-
-## ✔ ¿Para qué usamos Flyway?
+### ✔ ¿Para qué usamos Flyway?
 
 Flyway se utiliza para:
 
@@ -244,9 +293,7 @@ Flyway se utiliza para:
 - Permitir que el proyecto sea reproducible localmente.
 - Mantener controlado el historial de cambios de la base de datos.
 
----
-
-## 🔄 Flujo de migración
+### 🔄 Flujo de migración
 
 ```txt
 Docker Compose levanta PostgreSQL
@@ -262,19 +309,17 @@ PostgreSQL crea o actualiza las tablas
 Flyway registra el historial en flyway_schema_history
 ```
 
-# 🔄 Comunicación entre Servicios
+## 🔄 Comunicación entre Servicios
 
 La comunicación se realiza mediante **HTTP REST** utilizando **Spring WebClient**.
 
-## ✔ WebClient
+### ✔ WebClient
 
 - Cliente HTTP no bloqueante
 - Permite llamadas asincrónicas
 - Usado principalmente en el BFF
 
----
-
-## 📌 Ejemplo
+### 📌 Ejemplo
 
 ```java
 WebClient webClient = WebClient.create("http://donations-service");
@@ -285,9 +330,7 @@ webClient.get()
     .bodyToMono(String.class);
 ```
 
----
-
-# 🧠 Patrones de Diseño
+## 🧠 Patrones de Diseño
 
 ### ✔ Repository Pattern
 
@@ -301,17 +344,15 @@ Creación de objetos.
 
 Manejo de fallos entre servicios.
 
----
+## 🔐 Microservicio de Autenticación
 
-# 🔐 Microservicio de Autenticación
-
-## 📌 Responsabilidad
+### 📌 Responsabilidad
 
 Gestión de usuarios y autenticación mediante JWT.
 
-## 🧩 Entidad
+### 🧩 Entidad
 
-### Usuario
+#### Usuario
 
 | Atributo   | Tipo               |
 | ---------- | ------------------ |
@@ -320,22 +361,20 @@ Gestión de usuarios y autenticación mediante JWT.
 | password   | String             |
 | rol        | ENUM (ADMIN, USER) |
 
-## 🔗 Relaciones
+### 🔗 Relaciones
 
 - Usuario independiente
 - Rol como ENUM
 
----
+## 🎁 Microservicio de Donaciones
 
-# 🎁 Microservicio de Donaciones
-
-## 📌 Responsabilidad
+### 📌 Responsabilidad
 
 Gestión del ingreso de recursos.
 
-## 🧩 Entidades
+### 🧩 Entidades
 
-### Donante
+#### Donante
 
 | Atributo   | Tipo   |
 | ---------- | ------ |
@@ -343,18 +382,14 @@ Gestión del ingreso de recursos.
 | nombre     | String |
 | contacto   | String |
 
----
-
-### Recurso
+#### Recurso
 
 | Atributo   | Tipo   |
 | ---------- | ------ |
 | id_recurso | PK     |
 | tipo       | String |
 
----
-
-### Donacion
+#### Donacion
 
 | Atributo    | Tipo    |
 | ----------- | ------- |
@@ -364,9 +399,7 @@ Gestión del ingreso de recursos.
 | estado      | ENUM    |
 | id_donante  | FK      |
 
----
-
-### Donacion_Recurso
+#### Donacion_Recurso
 
 | Atributo    | Tipo |
 | ----------- | ---- |
@@ -374,26 +407,22 @@ Gestión del ingreso de recursos.
 | id_donacion | FK   |
 | id_recurso  | FK   |
 
----
-
-## 🔗 Relaciones
+### 🔗 Relaciones
 
 - Donante **1:N** Donacion
 - Donacion **N:M** Recurso
 - Donacion **1:N** Donacion_Recurso
 - Recurso **1:N** Donacion_Recurso
 
----
+## 📍 Microservicio de Necesidades
 
-# 📍 Microservicio de Necesidades
-
-## 📌 Responsabilidad
+### 📌 Responsabilidad
 
 Registrar necesidades.
 
-## 🧩 Entidades
+### 🧩 Entidades
 
-### Necesidad
+#### Necesidad
 
 | Atributo     | Tipo    |
 | ------------ | ------- |
@@ -403,27 +432,21 @@ Registrar necesidades.
 | estado       | ENUM    |
 | id_ubicacion | FK      |
 
----
-
-### Recurso
+#### Recurso
 
 | Atributo   | Tipo   |
 | ---------- | ------ |
 | id_recurso | PK     |
 | tipo       | String |
 
----
-
-### Ubicacion
+#### Ubicacion
 
 | Atributo     | Tipo   |
 | ------------ | ------ |
 | id_ubicacion | PK     |
 | direccion    | String |
 
----
-
-### Necesidad_Recurso
+#### Necesidad_Recurso
 
 | Atributo     | Tipo |
 | ------------ | ---- |
@@ -431,26 +454,22 @@ Registrar necesidades.
 | id_necesidad | FK   |
 | id_recurso   | FK   |
 
----
-
-## 🔗 Relaciones
+### 🔗 Relaciones
 
 - Necesidad **N:1** Ubicacion
 - Necesidad **N:M** Recurso
 - Necesidad **1:N** Necesidad_Recurso
 - Recurso **1:N** Necesidad_Recurso
 
----
+## 🚚 Microservicio de Logística
 
-# 🚚 Microservicio de Logística
-
-## 📌 Responsabilidad
+### 📌 Responsabilidad
 
 Gestión de almacenamiento y distribución.
 
-## 🧩 Entidades
+### 🧩 Entidades
 
-### CentroAcopio
+#### CentroAcopio
 
 | Atributo  | Tipo   |
 | --------- | ------ |
@@ -458,9 +477,7 @@ Gestión de almacenamiento y distribución.
 | nombre    | String |
 | ubicacion | String |
 
----
-
-### Inventario
+#### Inventario
 
 | Atributo      | Tipo    |
 | ------------- | ------- |
@@ -469,9 +486,7 @@ Gestión de almacenamiento y distribución.
 | recurso       | String  |
 | cantidad      | Integer |
 
----
-
-### Envio
+#### Envio
 
 | Atributo  | Tipo |
 | --------- | ---- |
@@ -480,27 +495,129 @@ Gestión de almacenamiento y distribución.
 | estado    | ENUM |
 | id_centro | FK   |
 
----
-
-## 🔗 Relaciones
+### 🔗 Relaciones
 
 - CentroAcopio **1:N** Inventario
 - CentroAcopio **1:N** Envio
 - Inventario **N:1** CentroAcopio
 - Envio **N:1** CentroAcopio
 
----
+## 🚀 Tecnologías
 
-# 🔄 Git Flow
+- Java 21
+- Spring Boot 3.3.x
+- Gradle (Groovy DSL)
+- PostgreSQL
+- Docker
+- KrakenD
+- React
+- TypeScript
+- WebClient
+- Resilience4j
+- Flyway
 
-## 🌿 Ramas
+## 🔒 Seguridad
+
+- JWT
+- Validación en KrakenD
+- Control de roles
+
+## 📈 Escalabilidad
+
+Cada microservicio escala de forma independiente.
+
+## Requerimientos funcionales
+
+Describen qué debe hacer el sistema en relación con la ayuda humanitaria y la gestión operativa de donaciones, necesidades y logística.
+
+### Plataforma general
+
+- Permitir registrar y dar seguimiento a donaciones de recursos.
+- Permitir registrar necesidades en terreno asociadas a ubicaciones y recursos.
+- Permitir coordinar la logística de almacenamiento y distribución (centros, inventario, envíos).
+
+### Autenticación y usuarios (auth-service)
+
+- Gestionar usuarios con identificación por correo electrónico y contraseña.
+- Asignar roles (ADMIN, USER) para distinguir permisos de uso.
+- Autenticar credenciales y emitir tokens JWT para sesiones de API.
+- Validar el JWT en las rutas protegidas según el diseño de seguridad (BFF y/o API Gateway).
+
+### Donaciones (donation-service)
+
+- Administrar donantes (datos de contacto y nombre).
+- Administrar el catálogo de recursos (tipo de recurso).
+- Registrar donaciones con fecha, cantidad, estado y relación con el donante.
+- Asociar cada donación con uno o más recursos según el modelo de dominio.
+
+### Necesidades (needs-service)
+
+- Registrar necesidades con cantidad, prioridad y estado.
+- Vincular necesidades a una ubicación y a los recursos requeridos.
+
+### Logística (logistics-service)
+
+- Gestionar centros de acopio (identificación y ubicación).
+- Mantener inventario por centro (recurso y cantidad disponible).
+- Registrar envíos con fecha, estado y centro involucrado.
+
+### Cliente web (frontend y BFF)
+
+- Exponer al navegador una API consolidada vía el BFF (por ejemplo rutas de autenticación y donaciones), reduciendo acoplamiento del front con múltiples microservicios.
+- Orquestar en el BFF las llamadas HTTP a los microservicios y adaptar las respuestas a las necesidades de la interfaz.
+
+### Integración entre servicios
+
+- Comunicar dominios únicamente por HTTP/REST, sin compartir bases de datos entre microservicios.
+
+## Requerimientos no funcionales
+
+Describen cómo debe comportarse el sistema (calidades, restricciones técnicas y operativas), más allá de las funciones de negocio.
+
+### Arquitectura y despliegue
+
+- Implementar arquitectura de microservicios separada por dominio (autenticación, donaciones, necesidades, logística).
+- Contenerizar cada componente con Docker y permitir orquestación local mediante Docker Compose.
+- Aplicar el patrón Database per Service: cada microservicio con su propia instancia/base PostgreSQL, sin relaciones entre bases de datos de otros servicios.
+
+### API y experiencia de cliente
+
+- Utilizar un Backend for Frontend (BFF) como punto de entrada HTTP para el navegador, con CORS configurable según el origen del frontend.
+- Contemplar un API Gateway (KrakenD) para enrutamiento centralizado y validación de JWT a nivel de entrada (según el despliegue elegido).
+
+### Seguridad
+
+- Autenticación basada en JWT (stateless).
+- Autorización por roles para operaciones sensibles o administrativas.
+
+### Resiliencia y rendimiento de integración
+
+- Usar cliente HTTP no bloqueante (WebClient) en la orquestación del BFF.
+- Incorporar patrón Circuit Breaker (Resilience4j) para degradación controlada ante fallos entre servicios.
+
+### Datos y reproducibilidad
+
+- Versionar el esquema de cada base con Flyway, ejecutando migraciones al iniciar cada servicio para entornos reproducibles.
+
+### Escalabilidad y mantenibilidad
+
+- Permitir escalar servicios de forma independiente según la carga de cada dominio.
+- Mantener bajo acoplamiento entre equipos y componentes y aislar fallos entre microservicios.
+
+### Stack tecnológico
+
+- Backend en Java 21 y Spring Boot; construcción con Gradle (Groovy DSL).
+- Frontend en React y TypeScript.
+- Persistencia en PostgreSQL por servicio.
+
+## 🔄 Git Flow
+
+### 🌿 Ramas
 
 - main → producción
 - develop → integración
 
----
-
-## 🌱 Flujo de trabajo
+### 🌱 Flujo de trabajo
 
 1. Antes de crear una feature:
 
@@ -528,7 +645,6 @@ git push origin feature/nombre-feature
 api/auth/register
 api/auth/login
 
-
 - feature → develop
 - Permite revisión de código
 
@@ -538,134 +654,13 @@ api/auth/login
 
 - merge develop → main
 
----
-
-## 🎯 Objetivo
+### 🎯 Objetivo
 
 - Trabajo colaborativo
 - Control de versiones
 - Estabilidad
 
----
-
-# 🔒 Seguridad
-
-- JWT
-- Validación en KrakenD
-- Control de roles
-
----
-
-# 📈 Escalabilidad
-
-Cada microservicio escala de forma independiente.
-
----
-
-# 🚀 Tecnologías
-
-- Java 21
-- Spring Boot 3.3.x
-- Gradle (Groovy DSL)
-- PostgreSQL
-- Docker
-- KrakenD
-- React
-- TypeScript
-- WebClient
-- Resilience4j
-- Flyway
-
----
-
-# Requerimientos funcionales
-
-Describen qué debe hacer el sistema en relación con la ayuda humanitaria y la gestión operativa de donaciones, necesidades y logística.
-
-## Plataforma general
-
-- Permitir registrar y dar seguimiento a donaciones de recursos.
-- Permitir registrar necesidades en terreno asociadas a ubicaciones y recursos.
-- Permitir coordinar la logística de almacenamiento y distribución (centros, inventario, envíos).
-
-## Autenticación y usuarios (auth-service)
-
-- Gestionar usuarios con identificación por correo electrónico y contraseña.
-- Asignar roles (ADMIN, USER) para distinguir permisos de uso.
-- Autenticar credenciales y emitir tokens JWT para sesiones de API.
-- Validar el JWT en las rutas protegidas según el diseño de seguridad (BFF y/o API Gateway).
-
-## Donaciones (donation-service)
-
-- Administrar donantes (datos de contacto y nombre).
-- Administrar el catálogo de recursos (tipo de recurso).
-- Registrar donaciones con fecha, cantidad, estado y relación con el donante.
-- Asociar cada donación con uno o más recursos según el modelo de dominio.
-
-## Necesidades (needs-service)
-
-- Registrar necesidades con cantidad, prioridad y estado.
-- Vincular necesidades a una ubicación y a los recursos requeridos.
-
-## Logística (logistics-service)
-
-- Gestionar centros de acopio (identificación y ubicación).
-- Mantener inventario por centro (recurso y cantidad disponible).
-- Registrar envíos con fecha, estado y centro involucrado.
-
-## Cliente web (frontend y BFF)
-
-- Exponer al navegador una API consolidada vía el BFF (por ejemplo rutas de autenticación y donaciones), reduciendo acoplamiento del front con múltiples microservicios.
-- Orquestar en el BFF las llamadas HTTP a los microservicios y adaptar las respuestas a las necesidades de la interfaz.
-
-## Integración entre servicios
-
-- Comunicar dominios únicamente por HTTP/REST, sin compartir bases de datos entre microservicios.
-
-
-
-# Requerimientos no funcionales
-
-Describen cómo debe comportarse el sistema (calidades, restricciones técnicas y operativas), más allá de las funciones de negocio.
-
-## Arquitectura y despliegue
-
-- Implementar arquitectura de microservicios separada por dominio (autenticación, donaciones, necesidades, logística).
-- Contenerizar cada componente con Docker y permitir orquestación local mediante Docker Compose.
-- Aplicar el patrón Database per Service: cada microservicio con su propia instancia/base PostgreSQL, sin relaciones entre bases de datos de otros servicios.
-
-## API y experiencia de cliente
-
-- Utilizar un Backend for Frontend (BFF) como punto de entrada HTTP para el navegador, con CORS configurable según el origen del frontend.
-- Contemplar un API Gateway (KrakenD) para enrutamiento centralizado y validación de JWT a nivel de entrada (según el despliegue elegido).
-
-## Seguridad
-
-- Autenticación basada en JWT (stateless).
-- Autorización por roles para operaciones sensibles o administrativas.
-
-## Resiliencia y rendimiento de integración
-
-- Usar cliente HTTP no bloqueante (WebClient) en la orquestación del BFF.
-- Incorporar patrón Circuit Breaker (Resilience4j) para degradación controlada ante fallos entre servicios.
-
-## Datos y reproducibilidad
-
-- Versionar el esquema de cada base con Flyway, ejecutando migraciones al iniciar cada servicio para entornos reproducibles.
-
-## Escalabilidad y mantenibilidad
-
-- Permitir escalar servicios de forma independiente según la carga de cada dominio.
-- Mantener bajo acoplamiento entre equipos y componentes y aislar fallos entre microservicios.
-
-## Stack tecnológico
-
-- Backend en Java 21 y Spring Boot; construcción con Gradle (Groovy DSL).
-- Frontend en React y TypeScript.
-- Persistencia en PostgreSQL por servicio.
-
-
-# ✅ Conclusión
+## ✅ Conclusión
 
 La arquitectura permite construir un sistema:
 
@@ -674,12 +669,8 @@ La arquitectura permite construir un sistema:
 - Mantenible
 - Preparado para crecimiento
 
----
-
-# 👨‍💻 Integrantes
+## 👨‍💻 Integrantes
 
 - Nelson Cofré
 - Nicolas Sanchez
 - Mario Cofré
-
----
