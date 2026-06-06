@@ -1,13 +1,13 @@
-package com.donaton.logistic;
+package com.donaton.logistics;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class LogisticServiceApplication {
+public class LogisticsServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(LogisticServiceApplication.class, args);
+		SpringApplication.run(LogisticsServiceApplication.class, args);
 	}
 
 }
