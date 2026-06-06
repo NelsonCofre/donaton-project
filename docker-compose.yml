@@ -45,7 +45,7 @@ services:
 
   auth-service:
     build:
-      context: ./backend/auth-service
+      context: ./backend/ms-auth
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
@@ -79,7 +79,7 @@ services:
 
   donation-service:
     build:
-      context: ./backend/donation-service
+      context: ./backend/ms-donation
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
@@ -118,7 +118,7 @@ services:
 
   logistics-service:
     build:
-      context: ./backend/logistic-service
+      context: ./backend/ms-logistic
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:

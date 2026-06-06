@@ -92,8 +92,12 @@ docker compose up --build -d
 | `bff-service` | **8080** | BFF Spring Boot: única API HTTP para el navegador |
 | `auth-service` | **8081** | Autenticación y emisión de JWT |
 | `donation-service` | **8082** | CRUD de donaciones |
+| `logistics-service` | **8084** | CRUD de centros de acopio, inventario y envíos |
 | `postgres-auth` | **5435** | Base de datos del auth-service |
 | `postgres-donation` | **5436** | Base de datos del donation-service |
+| `postgres-logistics` | **5437** | Base de datos del logistics-service |
+
+El código fuente de los microservicios vive en `backend/ms-auth`, `backend/ms-donation` y `backend/ms-logistic`; en `docker-compose.yml` conservan los nombres de servicio `auth-service`, `donation-service` y `logistics-service` para la red interna de Docker.
 
 ### Flujo recomendado
 
@@ -103,6 +107,30 @@ docker compose up --build -d
 4. El BFF reenvía las solicitudes a:
    - `auth-service` para login, registro y validación de token.
    - `donation-service` para el CRUD de donaciones.
+
+**Logística (`logistics-service`):** el servicio ya está disponible en Docker en el puerto **8084**, pero el BFF aún no lo integra. Hasta entonces, se prueba directamente contra la API del microservicio (ver sección siguiente).
+
+### Levantar solo logística
+
+Desde la raíz del proyecto:
+
+```bash
+docker compose up --build postgres-logistics logistics-service
+```
+
+En segundo plano:
+
+```bash
+docker compose up --build -d postgres-logistics logistics-service
+```
+
+Comprobar que responde:
+
+```bash
+curl http://localhost:8084/api/v1/logistics/collection-centers
+```
+
+Respuesta esperada al iniciar: `[]` (lista vacía).
 
 ### Comandos útiles
 
@@ -116,6 +144,7 @@ Ver logs de un servicio:
 
 ```bash
 docker compose logs -f bff-service
+docker compose logs -f logistics-service
 ```
 
 Detener el entorno:
@@ -134,7 +163,89 @@ docker compose down -v
 
 **CORS:** el BFF admite orígenes configurables (`APP_CORS_ALLOWED_ORIGINS`); alinealo con la URL desde la que sirves el frontend.
 
-## 🗄️ Bases de Datos por Microservicio
+---
+
+## 🧩 Descripción del Proyecto
+
+Donaton es una plataforma orientada a la gestión de ayuda humanitaria, permitiendo registrar donaciones, necesidades en terreno y coordinar la logística de distribución.
+
+El sistema implementa una arquitectura de **microservicios contenedorizados con Docker**, incorporando un **Backend for Frontend (BFF)** y un **API Gateway (KrakenD)**.
+El frontend está desarrollado en **React + TypeScript** y el backend en **Java 21 con Spring Boot**, utilizando **Gradle (Groovy DSL)** como herramienta de construcción.
+
+---
+
+# 🏗️ Arquitectura del Sistema
+
+## 🔷 Flujo de comunicación
+
+**Documentación / objetivo:** Frontend → BFF → API Gateway (KrakenD) → Microservicios.
+
+**Implementación actual en `docker-compose.yml`:** el navegador solo habla con el **frontend** y el **BFF**; el BFF llama por HTTP a **auth-service** y **donation-service**. **logistics-service** está definido en el compose y expone su API en el puerto **8084**, pero aún no es consumido por el BFF ni por el frontend (sin KrakenD en este compose; el gateway puede incorporarse después).
+
+---
+
+## 🧱 Patrones Arquitectónicos
+
+### ✔ Microservicios
+
+Separación por dominios:
+
+- auth-service
+- donations-service
+- needs-service
+- logistics-service
+
+---
+
+### ✔ API Gateway Pattern (KrakenD)
+
+- Enrutamiento de solicitudes
+- Seguridad (validación JWT)
+- Centralización de acceso
+
+---
+
+### ✔ Backend for Frontend (BFF)
+
+- Orquesta múltiples microservicios
+- Reduce llamadas desde frontend
+- Adapta respuestas a la UI
+- Utiliza **WebClient** para comunicación entre servicios
+
+---
+
+### ✔ Database per Service
+
+Cada microservicio posee su propia base de datos independiente, evitando el acoplamiento.
+
+---
+
+# 🐳 Contenerización con Docker
+
+Cada componente se ejecuta en su propio contenedor:
+
+- Frontend
+- BFF
+- KrakenD
+- Microservicios
+- Bases de datos
+
+Actualmente el `docker-compose.yml` raíz levanta el stack integrado local con:
+
+- frontend
+- bff-service
+- auth-service
+- postgres-auth
+- donation-service
+- postgres-donation
+- logistics-service
+- postgres-logistics
+
+Con `docker compose up --build` se levantan todos los servicios anteriores. Para probar solo logística, usar `docker compose up --build postgres-logistics logistics-service`.
+
+---
+
+# 🗄️ Bases de Datos por Microservicio
 
 Se implementa el patrón **Database per Service**, donde cada microservicio tiene su propia base de datos en Docker.
 

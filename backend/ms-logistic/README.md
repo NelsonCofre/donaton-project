@@ -9,11 +9,13 @@
 - Registra envios con fecha, estado y centro involucrado.
 - Persiste la informacion en PostgreSQL.
 - Aplica migraciones con Flyway al iniciar.
-- Expone una API REST consumida por el BFF.
+- Expone una API REST pensada para ser consumida por el BFF (integracion pendiente).
 
 ## Flujo general
 
-Frontend -> BFF -> `logistics-service` -> base de datos `logistics_db`
+**Objetivo:** Frontend -> BFF -> `logistics-service` -> base de datos `logistics_db`
+
+**Estado actual:** el microservicio responde de forma autonoma en el puerto `8084`. El BFF y el frontend aun no reenvian solicitudes a logistica; las pruebas se realizan directamente contra esta API.
 
 El servicio recibe requests REST, delega la logica a la capa de servicio y usa los repositorios JPA para acceder a la base de datos.
 
@@ -86,19 +88,51 @@ Por defecto:
 
 ## Docker
 
-El servicio puede levantarse con Docker Compose desde la raiz del proyecto:
+El codigo fuente vive en `backend/ms-logistic`. En `docker-compose.yml` el servicio se llama `logistics-service` y se construye desde esa carpeta.
+
+Desde la raiz del proyecto:
 
 ```bash
-docker compose up logistics-service
+docker compose up --build postgres-logistics logistics-service
 ```
 
-Esto construye la imagen, levanta `postgres-logistics` y expone el servicio en el puerto `8084`.
+En segundo plano:
+
+```bash
+docker compose up --build -d postgres-logistics logistics-service
+```
+
+Esto construye la imagen, levanta `postgres-logistics` (puerto **5437** en el host) y expone `logistics-service` en el puerto **8084**.
 
 Variables opcionales en compose:
 
 - `LOGISTICS_SERVICE_PORT` (default `8084`)
+- `LOGISTICS_SERVER_PORT` (default `8084`)
 - `LOGISTICS_POSTGRES_PUBLISH_PORT` (default `5437`)
 - `LOGISTICS_POSTGRES_USER` / `LOGISTICS_POSTGRES_PASSWORD` / `LOGISTICS_POSTGRES_DB`
+- `LOGISTICS_SPRING_APPLICATION_NAME` (default `logistics-service`)
+
+### Probar la API
+
+Listar centros de acopio (lista vacia al iniciar):
+
+```bash
+curl http://localhost:8084/api/v1/logistics/collection-centers
+```
+
+Crear un centro de acopio:
+
+```bash
+curl -X POST http://localhost:8084/api/v1/logistics/collection-centers \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Centro Norte","location":"Av. Principal 100, Santiago"}'
+```
+
+Ver logs del contenedor:
+
+```bash
+docker compose logs -f logistics-service
+```
 
 ## Objetivo tecnico
 
