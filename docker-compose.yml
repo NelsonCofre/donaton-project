@@ -12,7 +12,7 @@ services:
 
   bff-service:
     build:
-      context: ./backend/bff-service
+      context: ./backend/bff
       dockerfile: Dockerfile
     ports:
       - "${BFF_PORT:-8080}:8080"
@@ -48,13 +48,12 @@ services:
       context: ./backend/ms-auth
       dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "${AUTH_SERVICE_PORT:-8081}:8081"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth-db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: "Informatica.25"
       JWT_SECRET: ${AUTH_SERVICE_JWT_SECRET:-default-local-auth-secret-minimum-32-characters-long!!}
-      APP_CORS_ALLOWED_ORIGINS: ${AUTH_SERVICE_CORS_ORIGIN:-http://localhost:5173}
     depends_on:
       postgres-auth:
         condition: service_healthy
@@ -83,16 +82,16 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "${DONATION_SERVICE_PORT:-8082}:${SERVER_PORT:-8082}"
+      - "${DONATION_SERVICE_PORT:-8082}:8082"
     environment:
-      SERVER_PORT: ${SERVER_PORT:-8082}
-      SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME:-donation-service}
+      SERVER_PORT: 8082
+      SPRING_APPLICATION_NAME: donation-service
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-donation:5432/${POSTGRES_DB:-donation_db}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-donation}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-donation}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}
-      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
-      SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
       LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
     depends_on:
       postgres-donation:
@@ -122,16 +121,16 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "${LOGISTICS_SERVICE_PORT:-8084}:${LOGISTICS_SERVER_PORT:-8084}"
+      - "${LOGISTICS_SERVICE_PORT:-8084}:8084"
     environment:
-      SERVER_PORT: ${LOGISTICS_SERVER_PORT:-8084}
-      SPRING_APPLICATION_NAME: ${LOGISTICS_SPRING_APPLICATION_NAME:-logistics-service}
+      SERVER_PORT: 8084
+      SPRING_APPLICATION_NAME: logistics-service
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-logistics:5432/${LOGISTICS_POSTGRES_DB:-logistics_db}
       SPRING_DATASOURCE_USERNAME: ${LOGISTICS_POSTGRES_USER:-logistic}
       SPRING_DATASOURCE_PASSWORD: ${LOGISTICS_POSTGRES_PASSWORD:-logistic}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}
-      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
-      SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
       LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
     depends_on:
       postgres-logistics:
