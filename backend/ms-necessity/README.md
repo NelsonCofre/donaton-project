@@ -41,7 +41,34 @@ El servicio recibe requests REST, delega la logica a la capa de servicio y usa `
   `GlobalExceptionHandler` centraliza errores de validacion y recursos no encontrados.
 
 - `db/migration/`
-  Contiene las migraciones Flyway para crear e indexar la tabla de necesidades.
+  Contiene las migraciones Flyway para crear, indexar y poblar la tabla de necesidades.
+
+## Datos iniciales (semilla)
+
+Al iniciar el servicio, Flyway ejecuta `V3__seed_necessities.sql`, que inserta **10 necesidades de ejemplo** en la tabla `necessities`.
+
+El escenario simula una emergencia regional en el área de Valparaíso, con reportes de municipalidades y centros investigadores. Los registros cubren recursos como ropa, agua, alimentos, higiene e insumos médicos, en distintas ubicaciones y fechas.
+
+| Recurso | Cantidad | Ubicación | Reportado por |
+| --- | ---: | --- | --- |
+| Frazadas | 200 | Valparaíso, sector Playa Ancha | Municipalidad de Valparaíso |
+| Agua potable (litros) | 5000 | Viña del Mar, campamento provisional | Centro Investigador Regional Valparaíso |
+| Alimentos no perecederos | 800 | Quilpué, sector El Belloto | Municipalidad de Quilpué |
+| Kits de higiene personal | 350 | Villa Alemana, sector Colliguay | Centro Investigador Regional Valparaíso |
+| Insumos médicos (vendajes y antiséptico) | 120 | Concón, posta rural | Centro Investigador Regional Valparaíso |
+| Pañales talla M | 400 | Casablanca, albergue comunal | Municipalidad de Casablanca |
+| Colchonetas | 150 | Valparaíso, sector Barrio Puerto | Municipalidad de Valparaíso |
+| Leche en polvo | 300 | Viña del Mar, sector Reñaca Alto | Centro Investigador Regional Valparaíso |
+| Ropa de invierno (adulto) | 600 | Quilpué, sector Los Eucaliptus | Municipalidad de Quilpué |
+| Mochilas escolares con útiles | 180 | Villa Alemana, sector Miraflores | Municipalidad de Villa Alemana |
+
+La semilla se carga automáticamente al levantar el microservicio (local o Docker). Para verificar los datos:
+
+```bash
+curl http://localhost:8083/api/v1/necessities
+```
+
+**Nota:** si la migracion `V3` ya se ejecuto en una base existente, Flyway no la repetira. Para recargar la semilla desde cero, elimina el volumen `necessity-pg-data` y vuelve a levantar los contenedores.
 
 ## Endpoints expuestos
 
