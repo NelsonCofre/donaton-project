@@ -12,7 +12,7 @@ services:
 
   bff-service:
     build:
-      context: ./backend/bff-service
+      context: ./backend/bff
       dockerfile: Dockerfile
     ports:
       - "${BFF_PORT:-8080}:8080"
