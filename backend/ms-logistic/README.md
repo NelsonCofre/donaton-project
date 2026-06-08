@@ -9,6 +9,7 @@
 - Registra envios con fecha, estado y centro involucrado.
 - Persiste la informacion en PostgreSQL.
 - Aplica migraciones con Flyway al iniciar.
+- Carga datos demo de centros, inventario y envios mediante semilla Flyway.
 - Expone una API REST pensada para ser consumida por el BFF (integracion pendiente).
 
 ## Flujo general
@@ -43,7 +44,55 @@ El servicio recibe requests REST, delega la logica a la capa de servicio y usa l
   `GlobalExceptionHandler` centraliza errores de validacion y recursos no encontrados.
 
 - `db/migration/`
-  Contiene las migraciones Flyway para crear e indexar las tablas de logistica.
+  Contiene las migraciones Flyway para crear, indexar y poblar las tablas de logistica.
+
+## Datos iniciales (semilla)
+
+Al iniciar el servicio, Flyway ejecuta `V3__seed_logistics.sql`, que inserta datos de ejemplo en las tres tablas del dominio logístico.
+
+El escenario simula una emergencia regional en el área de Valparaíso: centros de acopio activos, stock disponible por centro y envíos en distintos estados del flujo de distribución.
+
+| Recurso | Cantidad |
+| --- | ---: |
+| Centros de acopio | 4 |
+| Registros de inventario | 10 |
+| Envíos | 5 |
+
+### Centros de acopio
+
+| Nombre | Ubicación |
+| --- | --- |
+| Centro Acopio Valparaíso Norte | Valparaíso, sector El Membrillo |
+| Centro Acopio Viña del Mar | Viña del Mar, calle 14 Norte |
+| Centro Acopio Quilpué | Quilpué, sector El Belloto |
+| Centro Acopio Villa Alemana | Villa Alemana, sector Miraflores |
+
+### Inventario (resumen)
+
+- **Valparaíso Norte:** frazadas, colchonetas, kits de higiene.
+- **Viña del Mar:** agua potable, leche en polvo, insumos médicos.
+- **Quilpué:** alimentos no perecederos, ropa de invierno, pañales.
+- **Villa Alemana:** mochilas escolares con útiles.
+
+### Envíos (estados demo)
+
+| Fecha | Estado | Centro |
+| --- | --- | --- |
+| 2026-06-06 | PLANNED | Valparaíso Norte |
+| 2026-06-05 | IN_TRANSIT | Viña del Mar |
+| 2026-06-04 | DELIVERED | Quilpué |
+| 2026-06-03 | DELIVERED | Valparaíso Norte |
+| 2026-06-02 | CANCELLED | Villa Alemana |
+
+La semilla se carga automáticamente al levantar el microservicio (local o Docker). Para verificar los datos:
+
+```bash
+curl http://localhost:8084/api/v1/logistics/collection-centers
+curl http://localhost:8084/api/v1/logistics/inventories
+curl http://localhost:8084/api/v1/logistics/shipments
+```
+
+**Nota:** si la migración `V3` ya se ejecutó en una base existente, Flyway no la repetirá. Para recargar la semilla desde cero, elimina el volumen `logistics-pg-data` y vuelve a levantar los contenedores.
 
 ## Endpoints expuestos
 
@@ -114,13 +163,15 @@ Variables opcionales en compose:
 
 ### Probar la API
 
-Listar centros de acopio (lista vacia al iniciar):
+Listar centros de acopio (con semilla: 4 registros demo):
 
 ```bash
 curl http://localhost:8084/api/v1/logistics/collection-centers
+curl http://localhost:8084/api/v1/logistics/inventories
+curl http://localhost:8084/api/v1/logistics/shipments
 ```
 
-Crear un centro de acopio:
+Crear un centro de acopio adicional:
 
 ```bash
 curl -X POST http://localhost:8084/api/v1/logistics/collection-centers \

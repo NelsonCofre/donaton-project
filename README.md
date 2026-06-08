@@ -128,9 +128,11 @@ Comprobar que responde:
 
 ```bash
 curl http://localhost:8084/api/v1/logistics/collection-centers
+curl http://localhost:8084/api/v1/logistics/inventories
+curl http://localhost:8084/api/v1/logistics/shipments
 ```
 
-Respuesta esperada al iniciar: `[]` (lista vacía).
+Respuesta esperada al iniciar (con semilla Flyway `V3`): **4 centros**, **10 inventarios** y **5 envíos** de demo. Detalle en [`backend/ms-logistic/README.md`](backend/ms-logistic/README.md).
 
 ### Comandos útiles
 
@@ -288,6 +290,7 @@ Al iniciar cada microservicio, Spring Boot detecta Flyway, busca las migraciones
 Flyway se utiliza para:
 
 - Crear las tablas iniciales de cada microservicio.
+- Cargar datos iniciales de demo (semilla), por ejemplo en `ms-logistic` mediante `V3__seed_logistics.sql`.
 - Versionar los cambios de la base de datos.
 - Evitar diferencias entre las bases de datos de los integrantes del equipo.
 - Permitir que el proyecto sea reproducible localmente.
@@ -466,6 +469,20 @@ Registrar necesidades.
 ### 📌 Responsabilidad
 
 Gestión de almacenamiento y distribución.
+
+### 🌱 Datos iniciales (semilla)
+
+`logistics-service` carga automáticamente **4 centros de acopio**, **10 registros de inventario** y **5 envíos de ejemplo** al iniciar, mediante la migración Flyway `V3__seed_logistics.sql`. El escenario simula una emergencia regional en el área de Valparaíso, con stock por centro y envíos en estados `PLANNED`, `IN_TRANSIT`, `DELIVERED` y `CANCELLED`.
+
+Para verificar:
+
+```bash
+curl http://localhost:8084/api/v1/logistics/collection-centers
+curl http://localhost:8084/api/v1/logistics/inventories
+curl http://localhost:8084/api/v1/logistics/shipments
+```
+
+Detalle completo de los registros y consideraciones de recarga en [`backend/ms-logistic/README.md`](backend/ms-logistic/README.md).
 
 ### 🧩 Entidades
 
