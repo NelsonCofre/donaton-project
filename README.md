@@ -288,6 +288,7 @@ Al iniciar cada microservicio, Spring Boot detecta Flyway, busca las migraciones
 Flyway se utiliza para:
 
 - Crear las tablas iniciales de cada microservicio.
+- Cargar datos iniciales de demo (semilla), por ejemplo en `ms-necessity` mediante `V3__seed_necessities.sql`.
 - Versionar los cambios de la base de datos.
 - Evitar diferencias entre las bases de datos de los integrantes del equipo.
 - Permitir que el proyecto sea reproducible localmente.
@@ -418,7 +419,19 @@ Gestión del ingreso de recursos.
 
 ### 📌 Responsabilidad
 
-Registrar necesidades.
+Registrar necesidades en terreno reportadas por municipalidades y centros investigadores.
+
+### 🌱 Datos iniciales (semilla)
+
+`necessity-service` carga automáticamente **10 necesidades de ejemplo** al iniciar, mediante la migración Flyway `V3__seed_necessities.sql`. El escenario simula una emergencia regional en el área de Valparaíso (ropa, agua, alimentos, higiene e insumos médicos).
+
+Para verificar:
+
+```bash
+curl http://localhost:8083/api/v1/necessities
+```
+
+Detalle completo de los registros y consideraciones de recarga en [`backend/ms-necessity/README.md`](backend/ms-necessity/README.md).
 
 ### 🧩 Entidades
 
