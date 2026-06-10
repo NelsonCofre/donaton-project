@@ -8,10 +8,10 @@ Se usa para encapsular el acceso a base de datos mediante Spring Data JPA. Este 
 
 Se encuentra en:
 
-- `backend/auth-service/src/main/java/com/donaton/auth/repository/UserAccountRepository.java`
-- `backend/auth-service/src/main/java/com/donaton/auth/repository/RefreshTokenRepository.java`
-- `backend/auth-service/src/main/java/com/donaton/auth/repository/BlacklistedTokenRepository.java`
-- `backend/donation-service/src/main/java/com/donaton/donation/repository/DonationRepository.java`
+- `backend/ms-auth/src/main/java/com/donaton/auth/repository/UserAccountRepository.java`
+- `backend/ms-auth/src/main/java/com/donaton/auth/repository/RefreshTokenRepository.java`
+- `backend/ms-auth/src/main/java/com/donaton/auth/repository/BlacklistedTokenRepository.java`
+- `backend/ms-donation/src/main/java/com/donaton/donation/repository/DonationRepository.java`
 
 ## 2. Service Layer Pattern
 
@@ -19,11 +19,11 @@ Se usa para separar la lógica de negocio de los controladores y de la persisten
 
 Se encuentra en:
 
-- `backend/auth-service/src/main/java/com/donaton/auth/service/AuthService.java`
-- `backend/auth-service/src/main/java/com/donaton/auth/service/RefreshTokenService.java`
-- `backend/auth-service/src/main/java/com/donaton/auth/service/TokenBlacklistService.java`
-- `backend/donation-service/src/main/java/com/donaton/donation/service/DonationService.java`
-- `backend/donation-service/src/main/java/com/donaton/donation/service/DonationServiceImpl.java`
+- `backend/ms-auth/src/main/java/com/donaton/auth/service/AuthService.java`
+- `backend/ms-auth/src/main/java/com/donaton/auth/service/RefreshTokenService.java`
+- `backend/ms-auth/src/main/java/com/donaton/auth/service/TokenBlacklistService.java`
+- `backend/ms-donation/src/main/java/com/donaton/donation/service/DonationService.java`
+- `backend/ms-donation/src/main/java/com/donaton/donation/service/DonationServiceImpl.java`
 
 ## 3. Controller Pattern
 
@@ -31,8 +31,8 @@ Se usa para manejar las solicitudes HTTP y delegar el trabajo a otras capas. Su 
 
 Se encuentra en:
 
-- `backend/auth-service/src/main/java/com/donaton/auth/controller/AuthController.java`
-- `backend/donation-service/src/main/java/com/donaton/donation/controller/DonationController.java`
+- `backend/ms-auth/src/main/java/com/donaton/auth/controller/AuthController.java`
+- `backend/ms-donation/src/main/java/com/donaton/donation/controller/DonationController.java`
 - `backend/bff-service/src/main/java/com/donaton/bff/controller/AuthBffController.java`
 - `backend/bff-service/src/main/java/com/donaton/bff/controller/DonationBffController.java`
 
@@ -42,8 +42,8 @@ Se usa para separar los contratos de entrada y salida del modelo interno. Esto a
 
 Se encuentra en:
 
-- `backend/auth-service/src/main/java/com/donaton/auth/dto/`
-- `backend/donation-service/src/main/java/com/donaton/donation/dto/`
+- `backend/ms-auth/src/main/java/com/donaton/auth/dto/`
+- `backend/ms-donation/src/main/java/com/donaton/donation/dto/`
 - `backend/bff-service/src/main/java/com/donaton/bff/dto/api/`
 - `backend/bff-service/src/main/java/com/donaton/bff/dto/auth/`
 - `backend/bff-service/src/main/java/com/donaton/bff/dto/donation/`
@@ -77,7 +77,7 @@ Se usa para interceptar solicitudes antes de que lleguen al controlador, especia
 
 Se encuentra en:
 
-- `backend/auth-service/src/main/java/com/donaton/auth/security/JwtAuthenticationFilter.java`
+- `backend/ms-auth/src/main/java/com/donaton/auth/security/JwtAuthenticationFilter.java`
 - `backend/bff-service/src/main/java/com/donaton/bff/security/JwtAuthFilter.java`
 
 ## 8. Context / Provider Pattern
@@ -104,8 +104,8 @@ El backend está organizado por capas: controlador, servicio, repositorio, model
 
 Se encuentra en:
 
-- `backend/auth-service/src/main/java/com/donaton/auth/`
-- `backend/donation-service/src/main/java/com/donaton/donation/`
+- `backend/ms-auth/src/main/java/com/donaton/auth/`
+- `backend/ms-donation/src/main/java/com/donaton/donation/`
 
 ## 11. Builder Pattern
 
@@ -113,8 +113,8 @@ Se usa para construir objetos de manera más clara, apoyado por Lombok. En este 
 
 Se encuentra en:
 
-- `backend/donation-service/src/main/java/com/donaton/donation/model/Donation.java`
-- `backend/donation-service/src/main/java/com/donaton/donation/service/DonationServiceImpl.java`
+- `backend/ms-donation/src/main/java/com/donaton/donation/model/Donation.java`
+- `backend/ms-donation/src/main/java/com/donaton/donation/service/DonationServiceImpl.java`
 
 ## 12. Exception Handler Pattern
 
@@ -122,8 +122,8 @@ Se usa para centralizar el manejo de errores y responder de forma consistente. E
 
 Se encuentra en:
 
-- `backend/auth-service/src/main/java/com/donaton/auth/exception/ApiExceptionHandler.java`
-- `backend/donation-service/src/main/java/com/donaton/donation/exception/GlobalExceptionHandler.java`
+- `backend/ms-auth/src/main/java/com/donaton/auth/exception/ApiExceptionHandler.java`
+- `backend/ms-donation/src/main/java/com/donaton/donation/exception/GlobalExceptionHandler.java`
 - `backend/bff-service/src/main/java/com/donaton/bff/exception/BffExceptionHandler.java`
 
 ## Resumen
