@@ -163,6 +163,8 @@ docker compose down -v
 
 **CORS:** el BFF admite orígenes configurables (`APP_CORS_ALLOWED_ORIGINS`); alinealo con la URL desde la que sirves el frontend.
 
+**Variables opcionales (`donation-service`):** `DONATION_SERVICE_PORT`, `DONATION_SERVER_PORT`, `DONATION_POSTGRES_PUBLISH_PORT`, `DONATION_POSTGRES_USER`, `DONATION_POSTGRES_PASSWORD`, `DONATION_POSTGRES_DB` y `DONATION_SPRING_APPLICATION_NAME`. Detalle en [`backend/ms-donation/README.md`](backend/ms-donation/README.md).
+
 ---
 
 ## 🧩 Descripción del Proyecto

@@ -63,11 +63,11 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-donation}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-donation}
-      POSTGRES_DB: ${POSTGRES_DB:-donation_db}
+      POSTGRES_USER: ${DONATION_POSTGRES_USER:-donation}
+      POSTGRES_PASSWORD: ${DONATION_POSTGRES_PASSWORD:-donation}
+      POSTGRES_DB: ${DONATION_POSTGRES_DB:-donation_db}
     ports:
-      - "${POSTGRES_PUBLISH_PORT:-5436}:5432"
+      - "${DONATION_POSTGRES_PUBLISH_PORT:-5436}:5432"
     volumes:
       - donation-pg-data:/var/lib/postgresql/data
     healthcheck:
@@ -83,13 +83,13 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "${DONATION_SERVICE_PORT:-8082}:${SERVER_PORT:-8082}"
+      - "${DONATION_SERVICE_PORT:-8082}:${DONATION_SERVER_PORT:-8082}"
     environment:
-      SERVER_PORT: ${SERVER_PORT:-8082}
-      SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME:-donation-service}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-donation:5432/${POSTGRES_DB:-donation_db}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-donation}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-donation}
+      SERVER_PORT: ${DONATION_SERVER_PORT:-8082}
+      SPRING_APPLICATION_NAME: ${DONATION_SPRING_APPLICATION_NAME:-donation-service}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-donation:5432/${DONATION_POSTGRES_DB:-donation_db}
+      SPRING_DATASOURCE_USERNAME: ${DONATION_POSTGRES_USER:-donation}
+      SPRING_DATASOURCE_PASSWORD: ${DONATION_POSTGRES_PASSWORD:-donation}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}
       SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
       SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}

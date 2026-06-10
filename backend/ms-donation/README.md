@@ -66,6 +66,42 @@ Por defecto:
 - base de datos `donation_db`
 - usuario `donation`
 
+## Docker
+
+El codigo fuente vive en `backend/ms-donation`. En `docker-compose.yml` el servicio se llama `donation-service` y se construye desde esa carpeta.
+
+Desde la raiz del proyecto:
+
+```bash
+docker compose up --build postgres-donation donation-service
+```
+
+En segundo plano:
+
+```bash
+docker compose up --build -d postgres-donation donation-service
+```
+
+Esto construye la imagen, levanta `postgres-donation` (puerto **5436** en el host) y expone `donation-service` en el puerto **8082**.
+
+Variables opcionales en compose:
+
+- `DONATION_SERVICE_PORT` (default `8082`)
+- `DONATION_SERVER_PORT` (default `8082`)
+- `DONATION_POSTGRES_PUBLISH_PORT` (default `5436`)
+- `DONATION_POSTGRES_USER` / `DONATION_POSTGRES_PASSWORD` / `DONATION_POSTGRES_DB`
+- `DONATION_SPRING_APPLICATION_NAME` (default `donation-service`)
+
+### Probar la API
+
+Listar donaciones (lista vacia al iniciar):
+
+```bash
+curl http://localhost:8082/api/v1/donations
+```
+
+Respuesta esperada al iniciar: `[]` (lista vacia).
+
 ## Objetivo tecnico
 
 Este servicio separa la gestion de donaciones del resto del sistema y mantiene una responsabilidad unica. Con eso se logra:
