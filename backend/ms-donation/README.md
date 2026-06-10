@@ -41,7 +41,34 @@ El servicio recibe requests REST, delega la logica a la capa de servicio y usa `
   `GlobalExceptionHandler` centraliza errores de validacion y recursos no encontrados.
 
 - `db/migration/`
-  Contiene las migraciones Flyway para crear e indexar la tabla de donaciones.
+  Contiene las migraciones Flyway para crear, indexar y poblar la tabla de donaciones.
+
+## Datos iniciales (semilla)
+
+Al iniciar el servicio, Flyway ejecuta `V3__seed_donations.sql`, que inserta **10 donaciones de ejemplo** en la tabla `donations`.
+
+El escenario complementa la emergencia regional en el area de Valparaiso (semilla de `ms-necessity`): donaciones recibidas en centros de acopio, con origenes de empresas, municipalidades, donantes individuales y organizaciones.
+
+| Recurso | Cantidad | Origen | Centro de acopio |
+| --- | ---: | --- | --- |
+| Frazadas | 250 | Empresa Textiles Pacífico S.A. | Centro Acopio Valparaíso Norte |
+| Agua potable (litros) | 3000 | Supermercados del Mar Ltda. | Centro Acopio Viña del Mar |
+| Alimentos no perecederos | 500 | Cruz Roja Chile – Regional Valparaíso | Centro Acopio Valparaíso Norte |
+| Kits de higiene personal | 200 | Municipalidad de Viña del Mar | Centro Acopio Viña del Mar |
+| Insumos médicos (vendajes y antiséptico) | 80 | Farmacias Cruz del Sur | Centro Acopio Quilpué |
+| Pañales talla M | 350 | María González (donante individual) | Centro Acopio Villa Alemana |
+| Colchonetas | 120 | Constructora Andina S.A. | Centro Acopio Valparaíso Norte |
+| Leche en polvo | 180 | ONG Alimenta Chile | Centro Acopio Quilpué |
+| Ropa de invierno (adulto) | 400 | Municipalidad de Quilpué | Centro Acopio Quilpué |
+| Mochilas escolares con útiles | 150 | Colegio San Agustín (colecta solidaria) | Centro Acopio Villa Alemana |
+
+La semilla se carga automaticamente al levantar el microservicio (local o Docker). Para verificar los datos:
+
+```bash
+curl http://localhost:8082/api/v1/donations
+```
+
+**Nota:** si la migracion `V3` ya se ejecuto en una base existente, Flyway no la repetira. Para recargar la semilla desde cero, elimina el volumen `donation-pg-data` y vuelve a levantar los contenedores.
 
 ## Endpoints expuestos
 
@@ -94,13 +121,11 @@ Variables opcionales en compose:
 
 ### Probar la API
 
-Listar donaciones (lista vacia al iniciar):
+Listar donaciones (10 registros de semilla al iniciar en base nueva):
 
 ```bash
 curl http://localhost:8082/api/v1/donations
 ```
-
-Respuesta esperada al iniciar: `[]` (lista vacia).
 
 ## Objetivo tecnico
 
