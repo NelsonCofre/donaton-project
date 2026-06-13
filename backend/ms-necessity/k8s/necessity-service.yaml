@@ -1,0 +1,182 @@
+# PostgreSQL del microservicio de necesidades.
+# Service DNS interno: postgres-necessity.donaton.svc.cluster.local:5432
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-necessity-secret
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-necessity
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+type: Opaque
+stringData:
+  POSTGRES_USER: necessity
+  POSTGRES_PASSWORD: necessity
+  POSTGRES_DB: necessity_db
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-necessity
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-necessity
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app.kubernetes.io/name: postgres-necessity
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-necessity
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-necessity
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  serviceName: postgres-necessity
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres-necessity
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres-necessity
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: postgres-necessity-secret
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - necessity
+                - -d
+                - necessity_db
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - necessity
+                - -d
+                - necessity_db
+            initialDelaySeconds: 15
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: necessity-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: necessity-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: necessity-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: necessity-service
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: microservice
+    spec:
+      containers:
+        - name: necessity-service
+          image: donaton/ms-necessity:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+              name: http
+          env:
+            - name: SERVER_PORT
+              value: "8083"
+            - name: SPRING_APPLICATION_NAME
+              value: necessity-service
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-necessity:5432/necessity_db
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-necessity-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-necessity-secret
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: validate
+            - name: SPRING_FLYWAY_ENABLED
+              value: "true"
+          readinessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: necessity-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: necessity-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  type: NodePort
+  ports:
+    - port: 8083
+      targetPort: 8083
+      nodePort: 30083
+      name: http
+  selector:
+    app.kubernetes.io/name: necessity-service
