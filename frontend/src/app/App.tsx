@@ -1,5 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
-import { DonationsPage } from '@/pages/donations'
+import { DonationCreatePage } from '@/pages/donation-create'
+import { DonationDetailPage } from '@/pages/donation-detail'
+import { DonationsListPage } from '@/pages/donations-list'
 import { LoginPage } from '@/pages/login'
 import { RegisterPage } from '@/pages/register'
 import { AuthProvider } from '@/shared/lib/authContext'
@@ -22,7 +24,23 @@ const router = createBrowserRouter([
         path: 'donaciones',
         element: (
           <ProtectedRoute>
-            <DonationsPage />
+            <DonationsListPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'donaciones/nueva',
+        element: (
+          <ProtectedRoute>
+            <DonationCreatePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'donaciones/:id',
+        element: (
+          <ProtectedRoute>
+            <DonationDetailPage />
           </ProtectedRoute>
         ),
       },

@@ -221,6 +221,50 @@ a:hover {
   margin-bottom: 1rem;
 }
 
+.donaton-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.donaton-page-header__text {
+  margin: 0;
+  color: var(--text);
+}
+
+.donaton-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.donaton-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, auto);
+  align-items: end;
+  gap: 0.85rem;
+}
+
+.donaton-sort-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.donaton-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.donaton-toolbar .donaton-action-bar {
+  margin-top: 0;
+}
+
 .donaton-form {
   display: flex;
   flex-direction: column;
@@ -233,6 +277,15 @@ a:hover {
   flex-direction: column;
   gap: 0.35rem;
   text-align: left;
+}
+
+.donaton-field--inline {
+  min-width: 180px;
+}
+
+.donaton-field-group {
+  display: grid;
+  gap: 1rem;
 }
 
 .donaton-field label {
@@ -327,6 +380,14 @@ a:hover {
   color: var(--text-h);
 }
 
+.donaton-table tbody tr[tabindex] {
+  cursor: pointer;
+}
+
+.donaton-table tbody tr[tabindex]:hover {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
 .donaton-muted {
   font-size: 0.875rem;
   color: var(--text);
@@ -417,6 +478,12 @@ a:hover {
   border: 1px solid color-mix(in srgb, #16a34a 35%, transparent);
 }
 
+.donaton-banner--info {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--text-h);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
 .donaton-card--highlight {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
   box-shadow: 0 0 0 1px var(--accent-soft);
@@ -426,6 +493,87 @@ a:hover {
   margin: 0 0 1rem;
   font-size: 1.125rem;
   color: var(--text-h);
+}
+
+.donaton-empty-state {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: start;
+  padding: 1rem 0;
+}
+
+.donaton-empty-state h2 {
+  margin: 0;
+}
+
+.donaton-state {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: start;
+}
+
+.donaton-detail-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.donaton-detail-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.donaton-detail-card__header h2 {
+  margin: 0;
+}
+
+.donaton-info-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+}
+
+.donaton-info-row {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.donaton-info-row dt {
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.donaton-info-row dd {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.donaton-link-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .donaton-page-header,
+  .donaton-detail-card__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .donaton-toolbar,
+  .donaton-info-list {
+    grid-template-columns: 1fr;
+  }
+
+  .donaton-sort-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

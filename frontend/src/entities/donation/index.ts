@@ -1,5 +1,8 @@
 export type {
   CreateDonacionRequest,
+  DonationFilters,
+  DonationSortDirection,
+  DonationSortField,
   Donacion,
   DonacionEstado,
   Donante,
