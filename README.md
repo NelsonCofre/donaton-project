@@ -67,6 +67,8 @@ Además de Compose, el proyecto incluye manifiestos K8s por pieza (`*/k8s/`) y u
 
 Guía completa: **[docs/KUBERNETES.md](docs/KUBERNETES.md)**
 
+Documentación interactiva de APIs (Swagger): **[docs/API.md](docs/API.md)**
+
 ```powershell
 .\scripts\build-k8s-images.ps1
 kubectl apply -f k8s.yaml
