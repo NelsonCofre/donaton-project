@@ -61,9 +61,27 @@ Actualmente el `docker-compose.yml` raíz levanta el stack integrado local con:
 - donation-service
 - postgres-donation
 
+## ☸️ Ejecutar con Kubernetes (Docker Desktop)
+
+Además de Compose, el proyecto incluye manifiestos K8s por pieza (`*/k8s/`) y un **`k8s.yaml` en la raíz** (namespace + secrets compartidos).
+
+Guía completa: **[docs/KUBERNETES.md](docs/KUBERNETES.md)**
+
+```powershell
+.\scripts\build-k8s-images.ps1
+kubectl apply -f k8s.yaml
+```
+
+| Servicio | URL (K8s) |
+|----------|-----------|
+| Frontend | http://localhost:30517 |
+| BFF | http://localhost:30080 |
+
+---
+
 ## ⚙️ Ejecutar con Docker Compose (raíz del repositorio)
 
-El **Backend for Frontend (BFF)** está en `backend/bff-service`: expone la API que consume el cliente (`/api/auth/*`, `/api/donations`), valida el JWT donde aplica y actúa como cliente HTTP hacia los microservicios.
+El **Backend for Frontend (BFF)** está en `backend/bff`: expone la API que consume el cliente (`/api/auth/*`, `/api/donations`), valida el JWT donde aplica y actúa como cliente HTTP hacia los microservicios.
 
 ### Requisitos
 

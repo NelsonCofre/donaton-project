@@ -1,0 +1,70 @@
+# Backend for Frontend (BFF): orquesta auth-service y donation-service.
+# Expuesto al navegador vía NodePort 30080 (equivalente al puerto 8080 de Compose).
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bff-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: bff-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: bff
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bff-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bff-service
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: bff
+    spec:
+      containers:
+        - name: bff-service
+          image: donaton/bff:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+            - name: APP_SERVICES_AUTH_BASE_URL
+              value: http://auth-service:8081
+            - name: APP_SERVICES_DONATION_BASE_URL
+              value: http://donation-service:8082
+            - name: APP_CORS_ALLOWED_ORIGINS
+              value: http://localhost:30517
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bff-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: bff-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: bff
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+      name: http
+  selector:
+    app.kubernetes.io/name: bff-service
