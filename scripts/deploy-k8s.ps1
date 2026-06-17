@@ -20,8 +20,8 @@ kubectl get pods,svc -n donaton
 Write-Host @"
 
 Acceso:
-  Frontend:  http://localhost:30517
-  BFF:       http://localhost:30080
+  Frontend:    http://localhost:30517
+  API Gateway: http://localhost:30090
 
 Eliminar: kubectl delete -f k8s.yaml
 "@ -ForegroundColor Cyan

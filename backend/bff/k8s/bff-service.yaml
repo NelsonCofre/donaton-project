@@ -1,5 +1,5 @@
 # Backend for Frontend (BFF): orquesta auth-service y donation-service.
-# Expuesto al navegador vía NodePort 30080 (equivalente al puerto 8080 de Compose).
+# Solo accesible dentro del cluster; el navegador entra por api-gateway (NodePort 30090).
 
 apiVersion: apps/v1
 kind: Deployment
@@ -60,11 +60,10 @@ metadata:
     app.kubernetes.io/part-of: donaton
     app.kubernetes.io/component: bff
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
     - port: 8080
       targetPort: 8080
-      nodePort: 30080
       name: http
   selector:
     app.kubernetes.io/name: bff-service

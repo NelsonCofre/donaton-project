@@ -5,17 +5,18 @@
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 
-$BffUrl = if ($env:VITE_API_BASE_URL) { $env:VITE_API_BASE_URL } else { "http://localhost:30080" }
+$ApiUrl = if ($env:VITE_API_BASE_URL) { $env:VITE_API_BASE_URL } else { "http://localhost:30090" }
 
 Write-Host "==> Construyendo imágenes Donaton para Kubernetes..." -ForegroundColor Cyan
-Write-Host "    VITE_API_BASE_URL = $BffUrl" -ForegroundColor DarkGray
+Write-Host "    VITE_API_BASE_URL = $ApiUrl" -ForegroundColor DarkGray
 
 $images = @(
     @{ Name = "donaton/ms-auth:latest";       Context = "backend/ms-auth" },
     @{ Name = "donaton/ms-donation:latest";   Context = "backend/ms-donation" },
     @{ Name = "donaton/ms-logistic:latest";   Context = "backend/ms-logistic" },
     @{ Name = "donaton/ms-necessity:latest";  Context = "backend/ms-necessity" },
-    @{ Name = "donaton/bff:latest";           Context = "backend/bff" }
+    @{ Name = "donaton/bff:latest";           Context = "backend/bff" },
+    @{ Name = "donaton/api-gateway:latest";   Context = "backend/api-gateway" }
 )
 
 foreach ($img in $images) {
@@ -25,8 +26,8 @@ foreach ($img in $images) {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
-Write-Host "`n==> docker build -t donaton/frontend:latest (VITE_API_BASE_URL=$BffUrl)" -ForegroundColor Yellow
-docker build -t donaton/frontend:latest --build-arg "VITE_API_BASE_URL=$BffUrl" (Join-Path $Root "frontend")
+Write-Host "`n==> docker build -t donaton/frontend:latest (VITE_API_BASE_URL=$ApiUrl)" -ForegroundColor Yellow
+docker build -t donaton/frontend:latest --build-arg "VITE_API_BASE_URL=$ApiUrl" (Join-Path $Root "frontend")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "`nImágenes listas:" -ForegroundColor Green
