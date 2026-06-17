@@ -1,6 +1,9 @@
 # Despliegue con Kubernetes (Docker Desktop)
 
-Guía para ejecutar **Donaton** en Kubernetes usando **Docker Desktop**, manteniendo también **Docker Compose** para desarrollo local.
+Guía para ejecutar **Donaton** en Kubernetes usando **Docker Desktop**.
+
+> **Importante:** `docker compose up` **no** despliega en Kubernetes. Solo sirve como entorno alternativo.  
+> En K8s el flujo es: **construir imágenes** (`docker build`) → **aplicar manifiestos** (`kubectl apply`).
 
 ---
 
@@ -12,11 +15,12 @@ Namespace: donaton
 ├── postgres-donation      → donation-service:8082
 ├── postgres-logistics     → logistics-service:8084
 ├── postgres-necessity     → necessity-service:8083
-├── bff-service:8080       → expuesto en localhost:30080
+├── bff-service:8080       → ClusterIP (solo interno)
+├── api-gateway:8090       → expuesto en localhost:30090
 └── frontend:80            → expuesto en localhost:30517
 ```
 
-El BFF llama a los microservicios por DNS interno (`http://auth-service:8081`), igual que en `docker-compose.yml`.
+El API Gateway enruta al BFF; el BFF llama a los microservicios por DNS interno (`http://auth-service:8081`), igual que en `docker-compose.yml`.
 
 ---
 
@@ -27,7 +31,8 @@ El BFF llama a los microservicios por DNS interno (`http://auth-service:8081`), 
 | **`k8s.yaml`** (raíz) | **Manifiesto único** — despliega todo el stack |
 | **`docker-compose.yml`** (raíz) | Entorno Docker Compose (desarrollo) |
 | **`frontend/k8s/`** | Deployment + Service del frontend |
-| **`backend/bff/k8s/`** | Deployment + Service del BFF |
+| **`backend/bff/k8s/`** | Deployment + Service del BFF (ClusterIP) |
+| **`backend/api-gateway/k8s/`** | Deployment + Service del API Gateway (KrakenD) |
 | **`backend/ms-auth/k8s/`** | PostgreSQL + auth-service |
 | **`backend/ms-donation/k8s/`** | PostgreSQL + donation-service |
 | **`backend/ms-logistic/k8s/`** | PostgreSQL + logistics-service |
@@ -57,7 +62,9 @@ kubectl get nodes
 
 ## Paso 1 — Construir imágenes Docker
 
-Kubernetes usa las mismas imágenes que construyes con Dockerfile. Desde la **raíz del repo**:
+Kubernetes **no construye** imágenes por sí solo. Primero hay que crearlas en tu máquina con `docker build` (Docker Desktop comparte esas imágenes con el cluster).
+
+Desde la **raíz del repo**:
 
 ```powershell
 .\scripts\build-k8s-images.ps1
@@ -72,7 +79,8 @@ Esto genera:
 | `donaton/ms-logistic:latest` | `backend/ms-logistic` |
 | `donaton/ms-necessity:latest` | `backend/ms-necessity` |
 | `donaton/bff:latest` | `backend/bff` |
-| `donaton/frontend:latest` | `frontend` (con `VITE_API_BASE_URL=http://localhost:30080`) |
+| `donaton/api-gateway:latest` | `backend/api-gateway` |
+| `donaton/frontend:latest` | `frontend` (con `VITE_API_BASE_URL=http://localhost:30090`) |
 
 > Docker Desktop comparte el daemon de Docker con Kubernetes: las imágenes locales están disponibles con `imagePullPolicy: IfNotPresent`.
 
@@ -111,7 +119,7 @@ kubectl get pods -n donaton -w
 | Servicio | URL |
 |----------|-----|
 | **Frontend** | http://localhost:30517 |
-| **BFF** | http://localhost:30080 |
+| **API Gateway** | http://localhost:30090 |
 | **Logistics API** (directo) | http://localhost:30084 |
 | **Necessity API** (directo) | http://localhost:30083 |
 
@@ -179,7 +187,7 @@ Elimina el namespace `donaton` y todos sus recursos (pods, services, PVCs).
 |---|----------------|------------|
 | **Comando** | `docker compose up --build` | `.\scripts\build-k8s-images.ps1` + `.\scripts\deploy-k8s.ps1` |
 | **Frontend** | http://localhost:5173 | http://localhost:30517 |
-| **BFF** | http://localhost:8080 | http://localhost:30080 |
+| **API Gateway** | http://localhost:8090 | http://localhost:30090 |
 | **BD** | Volúmenes Compose | PVC + StatefulSet |
 | **Uso** | Desarrollo diario | Evaluación / informe K8s |
 
@@ -203,7 +211,7 @@ kubectl apply -f backend/ms-auth/k8s/auth-service.yaml
 |----------|----------------|----------|
 | `ErrImageNeverPull` / `ImagePullBackOff` | Imagen no construida | Ejecutar `.\scripts\build-k8s-images.ps1` |
 | Pod `CrashLoopBackOff` en MS | BD no lista o Flyway falla | `kubectl logs <pod> -n donaton`; esperar postgres |
-| Frontend no llama al BFF | URL incorrecta en build | Rebuild frontend con `VITE_API_BASE_URL=http://localhost:30080` |
+| Frontend no llama a la API | URL incorrecta en build | Rebuild frontend con `VITE_API_BASE_URL=http://localhost:30090` |
 | CORS en login | Origen distinto | BFF usa `http://localhost:30517` en el manifiesto K8s |
 | PVC `Pending` | StorageClass | Docker Desktop crea `hostpath` por defecto; reiniciar K8s en Settings |
 
@@ -216,8 +224,8 @@ Los NodePort deben estar entre **30000–32767**. Equivalencias con Compose:
 | Compose (host) | Kubernetes (NodePort) |
 |----------------|------------------------|
 | 5173 (frontend) | 30517 |
-| 8080 (bff) | 30080 |
+| 8090 (api-gateway) | 30090 |
 | 8083 (necessity) | 30083 |
 | 8084 (logistics) | 30084 |
 
-Auth (8081) y donation (8082) son **ClusterIP** (solo acceso interno), igual que en producción detrás del BFF.
+Auth (8081), donation (8082) y BFF (8080) son **ClusterIP** (solo acceso interno), igual que en producción detrás del gateway.

@@ -754,7 +754,7 @@ spec:
     app.kubernetes.io/name: necessity-service
 ---
 # Backend for Frontend (BFF): orquesta auth-service y donation-service.
-# Expuesto al navegador vÃ­a NodePort 30080 (equivalente al puerto 8080 de Compose).
+# Solo accesible dentro del cluster; el navegador entra por api-gateway (NodePort 30090).
 
 apiVersion: apps/v1
 kind: Deployment
@@ -815,17 +815,78 @@ metadata:
     app.kubernetes.io/part-of: donaton
     app.kubernetes.io/component: bff
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
     - port: 8080
       targetPort: 8080
-      nodePort: 30080
       name: http
   selector:
     app.kubernetes.io/name: bff-service
 ---
+# API Gateway (KrakenD): enruta al BFF. Expuesto al navegador vÃ­a NodePort 30090.
+# El BFF valida JWT; KrakenD aplica CORS, rate limit y timeouts.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api-gateway
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: donaton/api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8090
+              name: http
+          readinessProbe:
+            tcpSocket:
+              port: 8090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8090
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: api-gateway
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: gateway
+spec:
+  type: NodePort
+  ports:
+    - port: 8090
+      targetPort: 8090
+      nodePort: 30090
+      name: http
+  selector:
+    app.kubernetes.io/name: api-gateway
+---
 # Frontend React (Nginx). La imagen debe construirse con:
-#   --build-arg VITE_API_BASE_URL=http://localhost:30080
+#   --build-arg VITE_API_BASE_URL=http://localhost:30090
 # Expuesto al navegador vÃ­a NodePort 30517 (equivalente al 5173 de Compose).
 
 apiVersion: apps/v1

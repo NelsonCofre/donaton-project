@@ -4,6 +4,6 @@ Manifiestos del **Backend for Frontend**. Orquesta `auth-service` y `donation-se
 
 | Recurso | Nombre en el cluster |
 |---------|----------------------|
-| BFF | `bff-service` (NodePort **30080**, puerto 8080) |
+| BFF | `bff-service` (ClusterIP 8080, solo interno) |
 
 Despliegue completo: [docs/KUBERNETES.md](../../../docs/KUBERNETES.md).
