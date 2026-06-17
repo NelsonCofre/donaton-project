@@ -48,6 +48,9 @@ Flujos principales:
 - `security/`
   `SecurityConfig`, `JwtAuthenticationFilter`, `JwtService` y `CustomUserDetailsService` implementan la seguridad JWT.
 
+- `config/`
+  `OpenApiConfig` define los metadatos de la documentacion Swagger/OpenAPI y el esquema JWT (`bearerAuth`).
+
 - `repository/`
   Acceso a persistencia con `UserAccountRepository`, `RefreshTokenRepository` y `BlacklistedTokenRepository`.
 
@@ -69,6 +72,24 @@ Flujos principales:
 - `/api/v1/auth/refresh-token`
 - `/api/v1/auth/logout`
 - `/api/v1/auth/me`
+
+## Documentacion API (Swagger)
+
+Con el servicio en ejecucion (puerto `8081`):
+
+| Recurso | URL |
+| --- | --- |
+| Swagger UI | http://localhost:8081/swagger-ui/index.html |
+| OpenAPI JSON | http://localhost:8081/v3/api-docs |
+
+Flujo sugerido para probar endpoints protegidos:
+
+1. Ejecutar `POST /api/v1/auth/login` o `POST /api/v1/auth/register`.
+2. Copiar el valor de `accessToken` de la respuesta.
+3. Pulsar **Authorize** en Swagger UI e ingresar el token (Swagger agrega el prefijo `Bearer`).
+4. Probar `GET /api/v1/auth/me` o `POST /api/v1/auth/logout`.
+
+Los endpoints de registro, login, validacion y refresh no requieren token. `/me` y `/logout` si.
 
 ## Configuracion
 

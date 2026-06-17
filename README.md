@@ -77,6 +77,8 @@ El stack se despliega en el **cluster de Kubernetes**, no con `docker compose up
 
 Guía completa: **[docs/KUBERNETES.md](docs/KUBERNETES.md)** · Pasos concretos: **[docs/EJECUTAR.md](docs/EJECUTAR.md)**
 
+Documentación interactiva de APIs (Swagger): **[docs/API.md](docs/API.md)**
+
 ```powershell
 # 1) Construir imágenes (docker build — no levanta la app)
 .\scripts\build-k8s-images.ps1

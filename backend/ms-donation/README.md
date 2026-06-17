@@ -36,6 +36,7 @@ El servicio recibe requests REST, delega la logica a la capa de servicio y usa `
 
 - `config/`
   `SecurityConfiguration` deja los endpoints accesibles en la version actual.
+  `OpenApiConfig` define los metadatos de la documentacion Swagger/OpenAPI.
 
 - `exception/`
   `GlobalExceptionHandler` centraliza errores de validacion y recursos no encontrados.
@@ -50,6 +51,17 @@ El servicio recibe requests REST, delega la logica a la capa de servicio y usa `
 - `GET /api/v1/donations/{id}`
 - `PUT /api/v1/donations/{id}`
 - `DELETE /api/v1/donations/{id}`
+
+## Documentacion API (Swagger)
+
+Con el servicio en ejecucion (puerto `8082`):
+
+| Recurso | URL |
+| --- | --- |
+| Swagger UI | http://localhost:8082/swagger-ui/index.html |
+| OpenAPI JSON | http://localhost:8082/v3/api-docs |
+
+Desde Swagger UI puedes probar el CRUD completo. El BFF consume esta API internamente en `/api/v1/donations` y expone al frontend rutas bajo `/api/donations`.
 
 ## Configuracion
 

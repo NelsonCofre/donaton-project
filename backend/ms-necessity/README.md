@@ -36,6 +36,7 @@ El servicio recibe requests REST, delega la logica a la capa de servicio y usa `
 
 - `config/`
   `SecurityConfiguration` deja los endpoints accesibles en la version actual.
+  `OpenApiConfig` define los metadatos de la documentacion Swagger/OpenAPI.
 
 - `exception/`
   `GlobalExceptionHandler` centraliza errores de validacion y recursos no encontrados.
@@ -77,6 +78,17 @@ curl http://localhost:8083/api/v1/necessities
 - `GET /api/v1/necessities/{id}`
 - `PUT /api/v1/necessities/{id}`
 - `DELETE /api/v1/necessities/{id}`
+
+## Documentacion API (Swagger)
+
+Con el servicio en ejecucion (puerto `8083`):
+
+| Recurso | URL |
+| --- | --- |
+| Swagger UI | http://localhost:8083/swagger-ui/index.html |
+| OpenAPI JSON | http://localhost:8083/v3/api-docs |
+
+Desde Swagger UI puedes probar el CRUD completo. Tras levantar el contenedor con la semilla Flyway, `GET /api/v1/necessities` deberia devolver las 10 necesidades de ejemplo del area de Valparaiso.
 
 ## Configuracion
 

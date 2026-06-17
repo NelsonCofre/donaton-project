@@ -40,6 +40,11 @@ public class SecurityConfig {
 			.exceptionHandling(exception -> exception.authenticationEntryPoint(restAuthenticationEntryPoint))
 			.authenticationProvider(authenticationProvider())
 			.authorizeHttpRequests(authorize -> authorize
+				.requestMatchers(
+					"/swagger-ui/**",
+					"/swagger-ui.html",
+					"/v3/api-docs/**"
+				).permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/validate-credentials", "/api/v1/auth/validate-token", "/api/v1/auth/refresh-token").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
 				.requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
