@@ -42,6 +42,7 @@ $pieceFiles = @(
     "backend/ms-logistic/k8s/logistics-service.yaml",
     "backend/ms-necessity/k8s/necessity-service.yaml",
     "backend/bff/k8s/bff-service.yaml",
+    "backend/api-gateway/k8s/api-gateway.yaml",
     "frontend/k8s/frontend.yaml"
 )
 

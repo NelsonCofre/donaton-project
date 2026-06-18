@@ -38,6 +38,7 @@ El servicio recibe requests REST, delega la logica a la capa de servicio y usa l
 
 - `config/`
   `SecurityConfiguration` deja los endpoints accesibles en la version actual.
+  `OpenApiConfig` define los metadatos de la documentacion Swagger/OpenAPI.
 
 - `exception/`
   `GlobalExceptionHandler` centraliza errores de validacion y recursos no encontrados.
@@ -70,6 +71,21 @@ El servicio recibe requests REST, delega la logica a la capa de servicio y usa l
 - `GET /api/v1/logistics/shipments/{id}`
 - `PUT /api/v1/logistics/shipments/{id}`
 - `DELETE /api/v1/logistics/shipments/{id}`
+
+## Documentacion API (Swagger)
+
+Con el servicio en ejecucion (puerto `8084`):
+
+| Recurso | URL |
+| --- | --- |
+| Swagger UI | http://localhost:8084/swagger-ui/index.html |
+| OpenAPI JSON | http://localhost:8084/v3/api-docs |
+
+La documentacion agrupa los 15 endpoints en tres secciones: **Centros de acopio**, **Inventario** y **Envios**. Flujo sugerido para probar desde Swagger UI:
+
+1. Crear un centro de acopio (`POST /collection-centers`).
+2. Registrar inventario asociado al `centerId` creado.
+3. Crear un envio con estado `PLANNED`, `IN_TRANSIT`, `DELIVERED` o `CANCELLED`.
 
 ## Configuracion
 

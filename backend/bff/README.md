@@ -44,7 +44,7 @@ Hoy el flujo principal es:
   Contiene `JwtAuthFilter`, que protege las rutas `/api/donations` validando el token contra `auth-service`.
 
 - `config/`
-  Configuracion de propiedades, CORS, filtros y `RestClient`.
+  Configuracion de propiedades, CORS, filtros, `RestClient` y `OpenApiConfig` (documentacion Swagger).
 
 - `dto/`
   Separa contratos del frontend (`dto/api`) de contratos internos hacia microservicios (`dto/auth`, `dto/donation`).
@@ -58,6 +58,24 @@ Hoy el flujo principal es:
 - `/api/auth/register`
 - `/api/donations`
 - `/api/donations/{id}`
+
+## Documentacion API (Swagger)
+
+Con el servicio en ejecucion (puerto `8080`):
+
+| Recurso | URL |
+| --- | --- |
+| Swagger UI | http://localhost:8080/swagger-ui/index.html |
+| OpenAPI JSON | http://localhost:8080/v3/api-docs |
+
+La documentacion refleja la integracion **actual** del BFF: auth y donaciones. Necesidades y logistica apareceran cuando se agreguen sus controllers.
+
+Flujo sugerido para probar donaciones:
+
+1. Levantar `auth-service`, `donation-service` y `bff-service`.
+2. Ejecutar `POST /api/auth/login` y copiar el campo `token`.
+3. Pulsar **Authorize** en Swagger UI e ingresar el token.
+4. Probar el CRUD en `/api/donations`.
 
 ## Configuracion
 

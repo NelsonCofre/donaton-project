@@ -1,5 +1,7 @@
 # 📦 Donaton - Arquitectura de Microservicios
 
+> **¿Cómo ejecutarlo?** → **[docs/EJECUTAR.md](docs/EJECUTAR.md)** (pasos concretos con Kubernetes)
+
 ## 🧩 Descripción del Proyecto
 
 Donaton es una plataforma orientada a la gestión de ayuda humanitaria, permitiendo registrar donaciones, necesidades en terreno y coordinar la logística de distribución.
@@ -7,13 +9,13 @@ Donaton es una plataforma orientada a la gestión de ayuda humanitaria, permitie
 El sistema implementa una arquitectura de **microservicios contenedorizados con Docker**, incorporando un **Backend for Frontend (BFF)** y un **API Gateway (KrakenD)**.
 El frontend está desarrollado en **React + TypeScript** y el backend en **Java 21 con Spring Boot**, utilizando **Gradle (Groovy DSL)** como herramienta de construcción.
 
+> **Ejecutar el proyecto:** guía paso a paso en **[docs/EJECUTAR.md](docs/EJECUTAR.md)** (Kubernetes).
+
 ## 🏗️ Arquitectura del Sistema
 
 ### 🔷 Flujo de comunicación
 
-**Documentación / objetivo:** Frontend → BFF → API Gateway (KrakenD) → Microservicios.
-
-**Implementación actual en `docker-compose.yml`:** el navegador solo habla con el **frontend** y el **BFF**; el BFF llama por HTTP a **auth-service** y **donation-service** (sin KrakenD en este compose; el gateway puede incorporarse después).
+**Implementación actual:** Frontend → **API Gateway (KrakenD)** → **BFF** → microservicios. El BFF valida JWT; KrakenD enruta, aplica CORS y rate limit.
 
 ### 🧱 Patrones Arquitectónicos
 
@@ -28,9 +30,9 @@ Separación por dominios:
 
 #### ✔ API Gateway Pattern (KrakenD)
 
-- Enrutamiento de solicitudes
-- Seguridad (validación JWT)
-- Centralización de acceso
+- Enrutamiento hacia el BFF
+- CORS centralizado y rate limit (p. ej. login)
+- **No** valida JWT (responsabilidad del BFF)
 
 #### ✔ Backend for Frontend (BFF)
 
@@ -56,30 +58,46 @@ Cada componente se ejecuta en su propio contenedor:
 Actualmente el `docker-compose.yml` raíz levanta el stack integrado local con:
 
 - frontend
+- api-gateway (KrakenD)
+- bff-service
 - auth-service
 - postgres-auth
 - donation-service
 - postgres-donation
 
-## ☸️ Ejecutar con Kubernetes (Docker Desktop)
+## ☸️ Ejecutar con Kubernetes (Docker Desktop) — **método principal**
 
-Además de Compose, el proyecto incluye manifiestos K8s por pieza (`*/k8s/`) y un **`k8s.yaml` en la raíz** (namespace + secrets compartidos).
+El stack se despliega en el **cluster de Kubernetes**, no con `docker compose up`.
 
-Guía completa: **[docs/KUBERNETES.md](docs/KUBERNETES.md)**
+| Comando | Qué hace |
+|---------|----------|
+| `docker build` (vía script) | **Solo construye imágenes** locales que K8s va a usar |
+| `kubectl apply -f k8s.yaml` | **Despliega y ejecuta** pods, services, BD en el cluster |
+| `docker compose up` | *(Opcional)* Entorno alternativo sin K8s — **no usar para la evaluación** |
+
+Guía completa: **[docs/KUBERNETES.md](docs/KUBERNETES.md)** · Pasos concretos: **[docs/EJECUTAR.md](docs/EJECUTAR.md)**
+
+Documentación interactiva de APIs (Swagger): **[docs/API.md](docs/API.md)**
 
 ```powershell
+# 1) Construir imágenes (docker build — no levanta la app)
 .\scripts\build-k8s-images.ps1
-kubectl apply -f k8s.yaml
+
+# 2) Desplegar en Kubernetes
+.\scripts\deploy-k8s.ps1
+# equivalente: kubectl apply -f k8s.yaml
 ```
 
 | Servicio | URL (K8s) |
 |----------|-----------|
 | Frontend | http://localhost:30517 |
-| BFF | http://localhost:30080 |
+| API Gateway | http://localhost:30090 |
 
 ---
 
-## ⚙️ Ejecutar con Docker Compose (raíz del repositorio)
+## ⚙️ Docker Compose *(opcional, solo desarrollo local)*
+
+> **Nota:** Si tu entrega/evaluación es con Kubernetes, usa la sección anterior. Compose no crea pods ni services de K8s; levanta contenedores sueltos en Docker Engine.
 
 El **Backend for Frontend (BFF)** está en `backend/bff`: expone la API que consume el cliente (`/api/auth/*`, `/api/donations`), valida el JWT donde aplica y actúa como cliente HTTP hacia los microservicios.
 
@@ -107,9 +125,10 @@ docker compose up --build -d
 | Servicio | Puerto en el host | Rol |
 |----------|-------------------|-----|
 | `frontend` | **5173** | UI estática servida con Nginx (`http://localhost:5173`) |
-| `bff-service` | **8080** | BFF Spring Boot: única API HTTP para el navegador |
-| `auth-service` | **8081** | Autenticación y emisión de JWT |
-| `donation-service` | **8082** | CRUD de donaciones |
+| `api-gateway` | **8090** | KrakenD: punto de entrada HTTP para el navegador |
+| `bff-service` | *(solo red Docker)* | BFF Spring Boot; orquesta auth y donation |
+| `auth-service` | *(solo red Docker)* | Autenticación y emisión de JWT |
+| `donation-service` | *(solo red Docker)* | CRUD de donaciones |
 | `logistics-service` | **8084** | CRUD de centros de acopio, inventario y envíos |
 | `postgres-auth` | **5435** | Base de datos del auth-service |
 | `postgres-donation` | **5436** | Base de datos del donation-service |
@@ -121,8 +140,8 @@ El código fuente de los microservicios vive en `backend/ms-auth`, `backend/ms-d
 
 1. Ejecutar `docker compose up --build`.
 2. Abrir el frontend en `http://localhost:5173`.
-3. El frontend consume el BFF en `http://localhost:8080`.
-4. El BFF reenvía las solicitudes a:
+3. El frontend consume el API Gateway en `http://localhost:8090`.
+4. KrakenD reenvía al BFF, que a su vez llama a:
    - `auth-service` para login, registro y validación de token.
    - `donation-service` para el CRUD de donaciones.
 
@@ -177,7 +196,7 @@ Detener y eliminar volúmenes:
 docker compose down -v
 ```
 
-**Variable del front (build):** la imagen del frontend inyecta la URL del BFF en tiempo de **build** con `VITE_API_BASE_URL` (por defecto `http://localhost:8080` en `docker-compose.yml`). Si cambias el host o puerto del BFF, reconstruye el servicio `frontend` con el valor correcto para que el navegador pueda llamarlo.
+**Variable del front (build):** la imagen del frontend inyecta la URL del API Gateway en tiempo de **build** con `VITE_API_BASE_URL` (por defecto `http://localhost:8090` en `docker-compose.yml`). Si cambias el host o puerto del gateway, reconstruye el servicio `frontend` con el valor correcto.
 
 **CORS:** el BFF admite orígenes configurables (`APP_CORS_ALLOWED_ORIGINS`); alinealo con la URL desde la que sirves el frontend.
 
