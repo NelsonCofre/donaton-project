@@ -1,26 +1,24 @@
 import type { Donacion } from '@/entities/donation'
+import { DonationListItem } from '@/features/donation-list-item'
 
 type DonationListProps = {
   donaciones: Donacion[]
-  loading: boolean
-  error: string | null
-  editingId: number | null
-  deletingId: number | null
-  onEdit: (donacion: Donacion) => void
-  onDelete: (id: number) => void
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString()
+  loading?: boolean
+  error?: string | null
+  editingId?: number | null
+  deletingId?: number | null
+  onSelect?: (donacion: Donacion) => void
+  onEdit?: (donacion: Donacion) => void
+  onDelete?: (id: number) => void
 }
 
 export function DonationList({
   donaciones,
-  loading,
-  error,
-  editingId,
-  deletingId,
+  loading = false,
+  error = null,
+  editingId = null,
+  deletingId = null,
+  onSelect,
   onEdit,
   onDelete,
 }: DonationListProps) {
@@ -55,49 +53,21 @@ export function DonationList({
             <th>Donante</th>
             <th>Contacto</th>
             <th>Recurso</th>
-            <th>Acciones</th>
+            {onEdit || onDelete ? <th>Acciones</th> : null}
           </tr>
         </thead>
         <tbody>
-          {donaciones.map((d) => {
-            const isEditing = editingId === d.idDonacion
-            const isDeleting = deletingId === d.idDonacion
-            return (
-              <tr key={d.idDonacion} className={isEditing ? 'donaton-row--active' : ''}>
-                <td>{d.idDonacion}</td>
-                <td>{formatDate(d.fecha)}</td>
-                <td>{d.cantidad}</td>
-                <td>
-                  <span className="donaton-badge">{d.estado}</span>
-                </td>
-                <td>{d.donante?.nombre ?? '—'}</td>
-                <td>{d.donante?.contacto ?? '—'}</td>
-                <td>
-                  {d.recursoTipos?.length ? d.recursoTipos.join(', ') : '—'}
-                </td>
-                <td>
-                  <div className="donaton-table-actions">
-                    <button
-                      type="button"
-                      className="donaton-btn donaton-btn--small donaton-btn--secondary"
-                      onClick={() => onEdit(d)}
-                      disabled={isDeleting}
-                    >
-                      {isEditing ? 'Editando…' : 'Editar'}
-                    </button>
-                    <button
-                      type="button"
-                      className="donaton-btn donaton-btn--small donaton-btn--danger"
-                      onClick={() => onDelete(d.idDonacion)}
-                      disabled={isDeleting || isEditing}
-                    >
-                      {isDeleting ? 'Eliminando…' : 'Eliminar'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            )
-          })}
+          {donaciones.map((donacion) => (
+            <DonationListItem
+              key={donacion.idDonacion}
+              donacion={donacion}
+              isEditing={editingId === donacion.idDonacion}
+              isDeleting={deletingId === donacion.idDonacion}
+              onSelect={onSelect}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
         </tbody>
       </table>
     </div>
