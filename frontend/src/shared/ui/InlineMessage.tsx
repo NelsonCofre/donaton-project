@@ -6,14 +6,18 @@ type InlineMessageProps = {
 export function InlineMessage({ tone = 'info', children }: InlineMessageProps) {
   if (tone === 'error') {
     return (
-      <div className="donaton-alert donaton-alert--error" role="alert">
+      <div className="donaton-inline-message donaton-inline-message--error" role="alert">
         {children}
       </div>
     )
   }
 
   return (
-    <p className={`donaton-banner donaton-banner--${tone === 'success' ? 'ok' : 'info'}`}>
+    <p
+      className={`donaton-inline-message donaton-inline-message--${
+        tone === 'success' ? 'success' : 'info'
+      }`}
+    >
       {children}
     </p>
   )

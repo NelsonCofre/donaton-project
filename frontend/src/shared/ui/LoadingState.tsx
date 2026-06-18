@@ -3,5 +3,10 @@ type LoadingStateProps = {
 }
 
 export function LoadingState({ message = 'Cargando…' }: LoadingStateProps) {
-  return <p className="donaton-muted">{message}</p>
+  return (
+    <div className="donaton-loading-state" aria-live="polite">
+      <span className="donaton-loading-state__pulse" />
+      <p className="donaton-muted">{message}</p>
+    </div>
+  )
 }

@@ -29,35 +29,60 @@ export function MainLayout() {
   return (
     <div className={`donaton-layout${isAuthPage ? ' donaton-layout--auth' : ''}`}>
       <header className="donaton-nav">
-        <NavLink
-          to={isAuthenticated ? '/donaciones' : '/login'}
-          className="donaton-nav__brand"
-        >
-          Donaton
-        </NavLink>
-        {isAuthenticated ? (
-          <>
-            <NavLink to="/donaciones" className={linkClass} end>
-              Donaciones
-            </NavLink>
-            <button
-              type="button"
-              className="donaton-nav__logout"
-              onClick={handleLogout}
+        <div className="donaton-nav__inner">
+          <div className="donaton-nav__brand-block">
+            <NavLink
+              to={isAuthenticated ? '/donaciones' : '/login'}
+              className="donaton-nav__brand"
             >
-              Cerrar sesión
-            </button>
-          </>
-        ) : (
-          <>
-            <NavLink to="/login" className={linkClass}>
-              Iniciar sesión
+              Donaton
             </NavLink>
-            <NavLink to="/register" className={linkClass}>
-              Registro
-            </NavLink>
-          </>
-        )}
+            <p className="donaton-nav__subtitle">
+              Centro operativo para donaciones, necesidades y logística.
+            </p>
+          </div>
+          {isAuthenticated ? (
+            <div className="donaton-nav__links">
+              <div className="donaton-nav__group">
+                <span className="donaton-nav__group-label">Operación</span>
+                <NavLink to="/donaciones" className={linkClass} end>
+                  Donaciones
+                </NavLink>
+                <NavLink to="/necesidades" className={linkClass}>
+                  Necesidades
+                </NavLink>
+              </div>
+              <div className="donaton-nav__group">
+                <span className="donaton-nav__group-label">Logística</span>
+                <NavLink to="/logistica/centros" className={linkClass}>
+                  Centros
+                </NavLink>
+                <NavLink to="/logistica/inventario" className={linkClass}>
+                  Inventario
+                </NavLink>
+                <NavLink to="/logistica/envios" className={linkClass}>
+                  Envios
+                </NavLink>
+              </div>
+              <button
+                type="button"
+                className="donaton-nav__logout"
+                onClick={handleLogout}
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          ) : (
+            <div className="donaton-nav__links donaton-nav__links--public">
+              <NavLink to="/login" className={linkClass}>
+                Iniciar sesión
+              </NavLink>
+              <NavLink to="/register" className={linkClass}>
+                Registro
+              </NavLink>
+            </div>
+          )}
+        </div>
       </header>
       <main
         className={`donaton-main${isAuthPage ? ' donaton-main--auth' : ''}`}
