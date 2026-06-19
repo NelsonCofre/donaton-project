@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app")
 public record BffProperties(Services services, Cors cors) {
 
-	public record Services(Service auth, Service donation) {
+	public record Services(Service auth, Service donation, Service necessity, Service logistics) {
 	}
 
 	public record Service(String baseUrl) {
