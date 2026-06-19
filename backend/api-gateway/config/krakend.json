@@ -172,6 +172,188 @@
           "method": "DELETE"
         }
       ]
+    },
+    {
+      "@comment": "Necesidades — JWT validado en el BFF",
+      "endpoint": "/api/v1/necessities",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/necessities",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/necessities/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/necessities/{id}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "PUT"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/necessities/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "DELETE"
+        }
+      ]
+    },
+    {
+      "@comment": "Logística — JWT validado en el BFF",
+      "endpoint": "/api/v1/logistics/{resource}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/logistics/{resource}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/logistics/{resource}/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/logistics/{resource}/{id}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "PUT"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/logistics/{resource}/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "DELETE"
+        }
+      ]
     }
   ]
 }

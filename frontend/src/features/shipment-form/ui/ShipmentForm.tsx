@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type {
   CollectionCenter,
   CreateShipmentRequest,
@@ -37,21 +37,28 @@ export function ShipmentForm({
   const [values, setValues] = useState<CreateShipmentRequest>(
     initialValues ?? {
       idCentro: centers[0]?.idCentro ?? 0,
-      destino: '',
-      detalle: '',
-      cantidad: 1,
       fecha: new Date().toISOString().slice(0, 10),
       estado: 'PREPARACION',
     },
   )
 
+  useEffect(() => {
+    if (initialValues || centers.length === 0) return
+    const centerExists = centers.some((center) => center.idCentro === values.idCentro)
+    if (!centerExists) {
+      setValues((current) => ({
+        ...current,
+        idCentro: centers[0].idCentro,
+      }))
+    }
+  }, [centers, initialValues, values.idCentro])
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
+    const selectedCenter = centers.some((center) => center.idCentro === values.idCentro)
+    if (!selectedCenter) return
     onSubmit({
       ...values,
-      destino: values.destino.trim(),
-      detalle: values.detalle.trim(),
-      cantidad: Math.max(1, Math.floor(Number(values.cantidad))),
     })
   }
 
@@ -82,49 +89,21 @@ export function ShipmentForm({
           />
         </div>
       </FieldGroup>
-      <FieldGroup>
-        <div className="donaton-field">
-          <label htmlFor="shipment-destination">Destino</label>
-          <input
-            id="shipment-destination"
-            value={values.destino}
-            onChange={(event) => setValues({ ...values, destino: event.target.value })}
-          />
-        </div>
-        <div className="donaton-field">
-          <label htmlFor="shipment-status">Estado</label>
-          <select
-            id="shipment-status"
-            value={values.estado}
-            onChange={(event) =>
-              setValues({ ...values, estado: event.target.value as ShipmentStatus })
-            }
-          >
-            {shipmentStates.map((state) => (
-              <option key={state} value={state}>
-                {state}
-              </option>
-            ))}
-          </select>
-        </div>
-      </FieldGroup>
       <div className="donaton-field">
-        <label htmlFor="shipment-detail">Detalle</label>
-        <input
-          id="shipment-detail"
-          value={values.detalle}
-          onChange={(event) => setValues({ ...values, detalle: event.target.value })}
-        />
-      </div>
-      <div className="donaton-field">
-        <label htmlFor="shipment-amount">Cantidad</label>
-        <input
-          id="shipment-amount"
-          type="number"
-          min={1}
-          value={values.cantidad}
-          onChange={(event) => setValues({ ...values, cantidad: Number(event.target.value) })}
-        />
+        <label htmlFor="shipment-status">Estado</label>
+        <select
+          id="shipment-status"
+          value={values.estado}
+          onChange={(event) =>
+            setValues({ ...values, estado: event.target.value as ShipmentStatus })
+          }
+        >
+          {shipmentStates.map((state) => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
+        </select>
       </div>
       {error ? <InlineMessage tone="error">{error}</InlineMessage> : null}
       {success ? <InlineMessage tone="success">{success}</InlineMessage> : null}

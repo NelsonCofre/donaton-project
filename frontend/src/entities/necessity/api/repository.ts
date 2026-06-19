@@ -1,4 +1,5 @@
 import { env } from '@/shared/config/env'
+import { getStoredToken } from '@/shared/lib/authStorage'
 import type { CreateNecesidadRequest, Necesidad } from '../model/types'
 
 export interface NecessityRepository {
@@ -83,25 +84,45 @@ const mockRepository: NecessityRepository = {
 }
 
 function createApiRepository(baseUrl: string): NecessityRepository {
+  function errorMessage(status: number, body: unknown) {
+    if (body && typeof body === 'object' && 'message' in body) {
+      const message = (body as { message: unknown }).message
+      if (typeof message === 'string' && message.trim()) return message
+    }
+    return `Error ${status}`
+  }
+
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
+    const token = getStoredToken()
     const response = await fetch(`${baseUrl}${path}`, {
       ...init,
       headers: {
         Accept: 'application/json',
         ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init?.headers ?? {}),
       },
     })
 
+    const text = await response.text()
+    let body: unknown = null
+    if (text) {
+      try {
+        body = JSON.parse(text) as unknown
+      } catch {
+        body = text
+      }
+    }
+
     if (!response.ok) {
-      throw new Error(`Error ${response.status}`)
+      throw new Error(errorMessage(response.status, body))
     }
 
     if (response.status === 204) {
       return undefined as T
     }
 
-    return (await response.json()) as T
+    return body as T
   }
 
   return {

@@ -22,9 +22,6 @@ export function ShipmentList({
         <thead>
           <tr>
             <th>Centro</th>
-            <th>Destino</th>
-            <th>Detalle</th>
-            <th>Cantidad</th>
             <th>Fecha</th>
             <th>Estado</th>
             <th>Acciones</th>
@@ -34,9 +31,6 @@ export function ShipmentList({
           {items.map((item) => (
             <tr key={item.idEnvio}>
               <td>{item.centroNombre}</td>
-              <td>{item.destino}</td>
-              <td>{item.detalle}</td>
-              <td>{item.cantidad}</td>
               <td>{new Date(item.fecha).toLocaleDateString()}</td>
               <td>
                 <StatusBadge label={item.estado} />

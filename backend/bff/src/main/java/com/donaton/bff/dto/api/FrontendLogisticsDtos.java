@@ -14,19 +14,13 @@ public final class FrontendLogisticsDtos {
 	public record CollectionCenterResponse(
 		long idCentro,
 		String nombre,
-		String ubicacion,
-		String responsable,
-		String telefono,
-		int capacidad
+		String ubicacion
 	) {
 	}
 
 	public record CreateCollectionCenterRequest(
 		@NotBlank String nombre,
-		@NotBlank String ubicacion,
-		String responsable,
-		String telefono,
-		Integer capacidad
+		@NotBlank String ubicacion
 	) {
 	}
 
@@ -53,9 +47,6 @@ public final class FrontendLogisticsDtos {
 		long idEnvio,
 		long idCentro,
 		String centroNombre,
-		String destino,
-		String detalle,
-		int cantidad,
 		String fecha,
 		String estado
 	) {
@@ -63,9 +54,6 @@ public final class FrontendLogisticsDtos {
 
 	public record CreateShipmentRequest(
 		@NotNull Long idCentro,
-		String destino,
-		String detalle,
-		Integer cantidad,
 		@NotBlank String fecha,
 		@NotBlank String estado
 	) {

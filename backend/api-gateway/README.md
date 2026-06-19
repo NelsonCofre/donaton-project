@@ -16,6 +16,10 @@ Frontend → api-gateway:8090 → bff-service:8080 → microservicios
 | `/api/auth/register` | POST | Rate limit por IP |
 | `/api/donations` | GET, POST | JWT en BFF |
 | `/api/donations/{id}` | GET, PUT, DELETE | JWT en BFF |
+| `/api/v1/necessities` | GET, POST | JWT en BFF |
+| `/api/v1/necessities/{id}` | GET, PUT, DELETE | JWT en BFF |
+| `/api/v1/logistics/{resource}` | GET, POST | JWT en BFF |
+| `/api/v1/logistics/{resource}/{id}` | GET, PUT, DELETE | JWT en BFF |
 
 ## Docker Compose
 

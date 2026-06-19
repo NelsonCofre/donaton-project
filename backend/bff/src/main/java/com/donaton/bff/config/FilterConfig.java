@@ -13,7 +13,14 @@ public class FilterConfig {
 	FilterRegistrationBean<JwtAuthFilter> jwtAuthFilterRegistration(JwtAuthFilter filter) {
 		FilterRegistrationBean<JwtAuthFilter> registration = new FilterRegistrationBean<>();
 		registration.setFilter(filter);
-		registration.addUrlPatterns("/api/donations", "/api/donations/*");
+		registration.addUrlPatterns(
+			"/api/donations",
+			"/api/donations/*",
+			"/api/v1/necessities",
+			"/api/v1/necessities/*",
+			"/api/v1/logistics",
+			"/api/v1/logistics/*"
+		);
 		registration.setOrder(1);
 		return registration;
 	}

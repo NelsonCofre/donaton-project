@@ -1,5 +1,7 @@
 # Frontend React (Nginx). La imagen debe construirse con:
 #   --build-arg VITE_API_BASE_URL=http://localhost:30090
+#   --build-arg VITE_NECESSITY_API_BASE_URL=http://localhost:30090
+#   --build-arg VITE_LOGISTICS_API_BASE_URL=http://localhost:30090
 # Expuesto al navegador vía NodePort 30517 (equivalente al 5173 de Compose).
 
 apiVersion: apps/v1

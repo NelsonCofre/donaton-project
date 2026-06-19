@@ -71,7 +71,7 @@ export function ShipmentsOverview() {
       <PageHeader
         eyebrow="Logística"
         title="Envios"
-        description="Coordina despachos entre centros y destinos con una UI lista para futura integracion real."
+        description="Coordina despachos registrados por centro, fecha y estado."
       />
 
       <div className="donaton-metric-grid">
@@ -120,9 +120,6 @@ export function ShipmentsOverview() {
             editing
               ? {
                   idCentro: editing.idCentro,
-                  destino: editing.destino,
-                  detalle: editing.detalle,
-                  cantidad: editing.cantidad,
                   fecha: editing.fecha,
                   estado: editing.estado,
                 }
