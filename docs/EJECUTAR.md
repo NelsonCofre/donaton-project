@@ -61,7 +61,7 @@ Esto ejecuta `docker build` para:
 | `donaton/ms-necessity:latest` | Necesidades |
 | `donaton/bff:latest` | BFF |
 | `donaton/api-gateway:latest` | KrakenD |
-| `donaton/frontend:latest` | React (apunta a `http://localhost:30090`) |
+| `donaton/frontend:latest` | React (auth, donaciones, necesidades y logística apuntan a `http://localhost:30090`) |
 
 > La primera vez puede tardar varios minutos (descarga de dependencias Gradle/npm).
 
@@ -109,9 +109,10 @@ kubectl describe pod <nombre-del-pod> -n donaton
 1. Abre http://localhost:30517
 2. Ve a **Registrarse** → crea un usuario (contraseña mínimo 8 caracteres)
 3. **Iniciar sesión**
-4. Entra a la sección de **donaciones** y crea o lista registros
+4. Entra a **donaciones**, **necesidades** o **logística** y crea o lista registros
 
 En DevTools → *Network*, las peticiones deben ir a `http://localhost:30090/api/...`.
+No deberían aparecer llamadas directas a `30083` o `30084`; el navegador entra por KrakenD y KrakenD reenvía al BFF.
 
 ### Prueba rápida por consola
 

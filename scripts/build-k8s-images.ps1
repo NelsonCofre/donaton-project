@@ -6,9 +6,13 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 
 $ApiUrl = if ($env:VITE_API_BASE_URL) { $env:VITE_API_BASE_URL } else { "http://localhost:30090" }
+$NecessityApiUrl = if ($env:VITE_NECESSITY_API_BASE_URL) { $env:VITE_NECESSITY_API_BASE_URL } else { $ApiUrl }
+$LogisticsApiUrl = if ($env:VITE_LOGISTICS_API_BASE_URL) { $env:VITE_LOGISTICS_API_BASE_URL } else { $ApiUrl }
 
 Write-Host "==> Construyendo imágenes Donaton para Kubernetes..." -ForegroundColor Cyan
 Write-Host "    VITE_API_BASE_URL = $ApiUrl" -ForegroundColor DarkGray
+Write-Host "    VITE_NECESSITY_API_BASE_URL = $NecessityApiUrl" -ForegroundColor DarkGray
+Write-Host "    VITE_LOGISTICS_API_BASE_URL = $LogisticsApiUrl" -ForegroundColor DarkGray
 
 $images = @(
     @{ Name = "donaton/ms-auth:latest";       Context = "backend/ms-auth" },
@@ -27,7 +31,11 @@ foreach ($img in $images) {
 }
 
 Write-Host "`n==> docker build -t donaton/frontend:latest (VITE_API_BASE_URL=$ApiUrl)" -ForegroundColor Yellow
-docker build -t donaton/frontend:latest --build-arg "VITE_API_BASE_URL=$ApiUrl" (Join-Path $Root "frontend")
+docker build -t donaton/frontend:latest `
+    --build-arg "VITE_API_BASE_URL=$ApiUrl" `
+    --build-arg "VITE_NECESSITY_API_BASE_URL=$NecessityApiUrl" `
+    --build-arg "VITE_LOGISTICS_API_BASE_URL=$LogisticsApiUrl" `
+    (Join-Path $Root "frontend")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "`nImágenes listas:" -ForegroundColor Green

@@ -1,4 +1,5 @@
 import { env } from '@/shared/config/env'
+import { getStoredToken } from '@/shared/lib/authStorage'
 import type {
   CollectionCenter,
   CreateCollectionCenterRequest,
@@ -29,17 +30,11 @@ let centers: CollectionCenter[] = [
     idCentro: 1,
     nombre: 'Centro Viña Norte',
     ubicacion: 'Vina del Mar',
-    responsable: 'Carla Muñoz',
-    telefono: '+56 9 5555 1111',
-    capacidad: 500,
   },
   {
     idCentro: 2,
     nombre: 'Centro Quilpue Solidario',
     ubicacion: 'Quilpue',
-    responsable: 'Jose Reyes',
-    telefono: '+56 9 5555 2222',
-    capacidad: 320,
   },
 ]
 
@@ -67,9 +62,6 @@ let shipments: Shipment[] = [
     idEnvio: 1,
     idCentro: 1,
     centroNombre: 'Centro Viña Norte',
-    destino: 'Albergue Miraflores',
-    detalle: 'Despacho mixto de agua y alimentos',
-    cantidad: 65,
     fecha: '2026-06-16',
     estado: 'EN_TRANSITO',
   },
@@ -77,9 +69,6 @@ let shipments: Shipment[] = [
     idEnvio: 2,
     idCentro: 2,
     centroNombre: 'Centro Quilpue Solidario',
-    destino: 'Escuela Canal Chacao',
-    detalle: 'Frazadas y kits de higiene',
-    cantidad: 40,
     fecha: '2026-06-15',
     estado: 'PREPARACION',
   },
@@ -168,9 +157,6 @@ const mockRepository: LogisticsRepository = {
       idEnvio: nextId(shipments, 'idEnvio'),
       idCentro: payload.idCentro,
       centroNombre: getCenterName(payload.idCentro),
-      destino: payload.destino,
-      detalle: payload.detalle,
-      cantidad: payload.cantidad,
       fecha: payload.fecha,
       estado: payload.estado,
     }
@@ -182,9 +168,6 @@ const mockRepository: LogisticsRepository = {
       idEnvio: id,
       idCentro: payload.idCentro,
       centroNombre: getCenterName(payload.idCentro),
-      destino: payload.destino,
-      detalle: payload.detalle,
-      cantidad: payload.cantidad,
       fecha: payload.fecha,
       estado: payload.estado,
     }
@@ -197,25 +180,45 @@ const mockRepository: LogisticsRepository = {
 }
 
 function createApiRepository(baseUrl: string): LogisticsRepository {
+  function errorMessage(status: number, body: unknown) {
+    if (body && typeof body === 'object' && 'message' in body) {
+      const message = (body as { message: unknown }).message
+      if (typeof message === 'string' && message.trim()) return message
+    }
+    return `Error ${status}`
+  }
+
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
+    const token = getStoredToken()
     const response = await fetch(`${baseUrl}${path}`, {
       ...init,
       headers: {
         Accept: 'application/json',
         ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init?.headers ?? {}),
       },
     })
 
+    const text = await response.text()
+    let body: unknown = null
+    if (text) {
+      try {
+        body = JSON.parse(text) as unknown
+      } catch {
+        body = text
+      }
+    }
+
     if (!response.ok) {
-      throw new Error(`Error ${response.status}`)
+      throw new Error(errorMessage(response.status, body))
     }
 
     if (response.status === 204) {
       return undefined as T
     }
 
-    return (await response.json()) as T
+    return body as T
   }
 
   return {

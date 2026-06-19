@@ -7,9 +7,6 @@ export type CollectionCenterFormValues = CreateCollectionCenterRequest
 const emptyValues: CollectionCenterFormValues = {
   nombre: '',
   ubicacion: '',
-  responsable: '',
-  telefono: '',
-  capacidad: 100,
 }
 
 type CollectionCenterFormProps = {
@@ -41,9 +38,6 @@ export function CollectionCenterForm({
       ...values,
       nombre: values.nombre.trim(),
       ubicacion: values.ubicacion.trim(),
-      responsable: values.responsable.trim(),
-      telefono: values.telefono.trim(),
-      capacidad: Math.max(1, Math.floor(Number(values.capacidad))),
     })
   }
 
@@ -64,30 +58,6 @@ export function CollectionCenterForm({
           onChange={(ubicacion) => setValues({ ...values, ubicacion })}
         />
       </FieldGroup>
-      <FieldGroup>
-        <InputField
-          id="center-manager"
-          label="Responsable"
-          value={values.responsable}
-          onChange={(responsable) => setValues({ ...values, responsable })}
-        />
-        <InputField
-          id="center-phone"
-          label="Telefono"
-          value={values.telefono}
-          onChange={(telefono) => setValues({ ...values, telefono })}
-        />
-      </FieldGroup>
-      <div className="donaton-field">
-        <label htmlFor="center-capacity">Capacidad</label>
-        <input
-          id="center-capacity"
-          type="number"
-          min={1}
-          value={values.capacidad}
-          onChange={(event) => setValues({ ...values, capacidad: Number(event.target.value) })}
-        />
-      </div>
       {error ? <InlineMessage tone="error">{error}</InlineMessage> : null}
       {success ? <InlineMessage tone="success">{success}</InlineMessage> : null}
       <div className="donaton-form-actions">

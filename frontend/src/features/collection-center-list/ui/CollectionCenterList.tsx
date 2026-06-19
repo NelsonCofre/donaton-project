@@ -13,9 +13,6 @@ export function CollectionCenterList({ centers, onSelect }: CollectionCenterList
           <tr>
             <th>Nombre</th>
             <th>Ubicacion</th>
-            <th>Responsable</th>
-            <th>Telefono</th>
-            <th>Capacidad</th>
           </tr>
         </thead>
         <tbody>
@@ -33,9 +30,6 @@ export function CollectionCenterList({ centers, onSelect }: CollectionCenterList
             >
               <td>{center.nombre}</td>
               <td>{center.ubicacion}</td>
-              <td>{center.responsable}</td>
-              <td>{center.telefono}</td>
-              <td>{center.capacidad}</td>
             </tr>
           ))}
         </tbody>

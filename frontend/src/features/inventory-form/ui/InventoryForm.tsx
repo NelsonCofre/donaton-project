@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CollectionCenter, CreateInventoryItemRequest } from '@/entities/logistics'
 import { InlineMessage } from '@/shared/ui'
 
@@ -31,8 +31,21 @@ export function InventoryForm({
     },
   )
 
+  useEffect(() => {
+    if (initialValues || centers.length === 0) return
+    const centerExists = centers.some((center) => center.idCentro === values.idCentro)
+    if (!centerExists) {
+      setValues((current) => ({
+        ...current,
+        idCentro: centers[0].idCentro,
+      }))
+    }
+  }, [centers, initialValues, values.idCentro])
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
+    const selectedCenter = centers.some((center) => center.idCentro === values.idCentro)
+    if (!selectedCenter) return
     onSubmit({
       ...values,
       recurso: values.recurso.trim(),

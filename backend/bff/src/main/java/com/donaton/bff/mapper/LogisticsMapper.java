@@ -46,10 +46,7 @@ public final class LogisticsMapper {
 		return new CollectionCenterResponse(
 			dto.id() != null ? dto.id() : 0L,
 			dto.name() != null ? dto.name() : "",
-			dto.location() != null ? dto.location() : "",
-			"",
-			"",
-			0
+			dto.location() != null ? dto.location() : ""
 		);
 	}
 
@@ -88,9 +85,6 @@ public final class LogisticsMapper {
 			dto.id() != null ? dto.id() : 0L,
 			dto.centerId() != null ? dto.centerId() : 0L,
 			centerName != null ? centerName : "",
-			"",
-			"",
-			0,
 			dto.date() != null ? dto.date().toString() : "",
 			toFrontendStatus(dto.status())
 		);

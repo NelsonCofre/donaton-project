@@ -75,7 +75,9 @@ Los estados de donación en tipos TypeScript son orientativos hasta que el backe
 
 | Variable | Descripción |
 |----------|-------------|
-| `VITE_API_BASE_URL` | Origen del BFF (por defecto `http://localhost:8080`). |
+| `VITE_API_BASE_URL` | Origen del API Gateway/BFF para auth y donaciones. En K8s: `http://localhost:30090`. |
+| `VITE_NECESSITY_API_BASE_URL` | Origen de necesidades. Vacío usa mock local; en K8s se apunta al gateway `http://localhost:30090`. |
+| `VITE_LOGISTICS_API_BASE_URL` | Origen de logística. Vacío usa mock local; en K8s se apunta al gateway `http://localhost:30090`. |
 
 Copia `.env.example` a `.env` y ajusta la URL en desarrollo.
 
@@ -121,13 +123,16 @@ docker compose up -d frontend
 
 La app queda en el puerto del host **`FRONTEND_PORT`** (por defecto **5173**), mapeado al 80 del contenedor.
 
-`VITE_API_BASE_URL` se resuelve **en tiempo de build** (Vite). Debe ser una URL que el **navegador** pueda alcanzar desde tu máquina (normalmente el BFF publicado en el host), p. ej. `http://localhost:8080`. Puedes pasarla al construir:
+Las variables `VITE_*_API_BASE_URL` se resuelven **en tiempo de build** (Vite). Deben ser URLs que el **navegador** pueda alcanzar desde tu máquina; en Kubernetes apuntan al API Gateway (`http://localhost:30090`). Puedes pasarlas al construir:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:8080 docker compose build frontend
+VITE_API_BASE_URL=http://localhost:8090 \
+VITE_NECESSITY_API_BASE_URL=http://localhost:8090 \
+VITE_LOGISTICS_API_BASE_URL=http://localhost:8090 \
+docker compose build frontend
 ```
 
-O definir `VITE_API_BASE_URL` y opcionalmente `FRONTEND_PORT` en un archivo `.env` en la raíz del repo (Compose las lee automáticamente).
+O definir las variables `VITE_*_API_BASE_URL` y opcionalmente `FRONTEND_PORT` en un archivo `.env` en la raíz del repo (Compose las lee automáticamente).
 
 ## Estado del backend
 

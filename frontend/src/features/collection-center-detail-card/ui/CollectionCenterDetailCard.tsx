@@ -13,9 +13,6 @@ export function CollectionCenterDetailCard({ center }: CollectionCenterDetailCar
       </div>
       <dl className="donaton-info-list">
         <InfoRow label="Ubicacion" value={center.ubicacion} />
-        <InfoRow label="Responsable" value={center.responsable} />
-        <InfoRow label="Telefono" value={center.telefono} />
-        <InfoRow label="Capacidad" value={center.capacidad} />
       </dl>
     </div>
   )
