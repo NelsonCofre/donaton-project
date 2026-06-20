@@ -1,0 +1,359 @@
+{
+  "version": 3,
+  "name": "donaton-api-gateway",
+  "port": 8090,
+  "timeout": "8000ms",
+  "cache_ttl": "300s",
+  "extra_config": {
+    "security/cors": {
+      "allow_origins": [
+        "http://localhost:5173",
+        "http://localhost:30517"
+      ],
+      "allow_methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ],
+      "allow_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "expose_headers": [
+        "Content-Length"
+      ],
+      "max_age": "12h"
+    },
+    "router": {
+      "return_error_msg": true
+    }
+  },
+  "endpoints": [
+    {
+      "@comment": "Auth público — rate limit por IP",
+      "endpoint": "/api/auth/login",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "qos/ratelimit/router": {
+          "max_rate": 100,
+          "client_max_rate": 5,
+          "strategy": "ip"
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/auth/login",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/auth/register",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "qos/ratelimit/router": {
+          "max_rate": 50,
+          "client_max_rate": 3,
+          "strategy": "ip"
+        }
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/auth/register",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "@comment": "Donaciones — JWT validado en el BFF",
+      "endpoint": "/api/donations",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/donations",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/donations",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/donations",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/donations/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/donations/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/donations/{id}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/donations/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "PUT"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/donations/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/donations/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "DELETE"
+        }
+      ]
+    },
+    {
+      "@comment": "Necesidades — JWT validado en el BFF",
+      "endpoint": "/api/v1/necessities",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/necessities",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/necessities/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/necessities/{id}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "PUT"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/necessities/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/necessities/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "DELETE"
+        }
+      ]
+    },
+    {
+      "@comment": "Logística — JWT validado en el BFF",
+      "endpoint": "/api/v1/logistics/{resource}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/logistics/{resource}",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/logistics/{resource}/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/logistics/{resource}/{id}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "PUT"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/logistics/{resource}/{id}",
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/v1/logistics/{resource}/{id}",
+          "host": [
+            "http://bff-service:8080"
+          ],
+          "method": "DELETE"
+        }
+      ]
+    }
+  ]
+}

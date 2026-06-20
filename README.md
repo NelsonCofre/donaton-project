@@ -1,10 +1,109 @@
-# 📦 Donaton - Arquitectura de Microservicios (Informe Evaluación 2)
+# 📦 Donaton - Arquitectura de Microservicios
+
+> **¿Cómo ejecutarlo?** → **[docs/EJECUTAR.md](docs/EJECUTAR.md)** (Kubernetes paso a paso)
+>
+> **Referencia K8s** → **[docs/KUBERNETES.md](docs/KUBERNETES.md)** (arquitectura, puertos, scripts)
+>
+> **Tests y cobertura** → **[docs/TESTING.md](docs/TESTING.md)** (JUnit/JaCoCo + Vitest)
+
+## 🧩 Descripción del Proyecto
+
+Donaton es una plataforma orientada a la gestión de ayuda humanitaria, permitiendo registrar donaciones, necesidades en terreno y coordinar la logística de distribución.
+
+El sistema implementa una arquitectura de **microservicios contenedorizados con Docker**, incorporando un **Backend for Frontend (BFF)** y un **API Gateway (KrakenD)**.
+El frontend está desarrollado en **React + TypeScript** y el backend en **Java 21 con Spring Boot**, utilizando **Gradle (Groovy DSL)** como herramienta de construcción.
+
+> **Ejecutar el proyecto:** guía paso a paso en **[docs/EJECUTAR.md](docs/EJECUTAR.md)** (Kubernetes).
+
+## 🏗️ Arquitectura del Sistema
+
+### 🔷 Flujo de comunicación
+
+**Implementación actual:** Frontend → **API Gateway (KrakenD)** → **BFF** → microservicios. El BFF valida JWT; KrakenD enruta, aplica CORS y rate limit.
+
+### 🧱 Patrones Arquitectónicos
+
+#### ✔ Microservicios
+
+Separación por dominios:
+
+- auth-service
+- donations-service
+- needs-service
+- logistics-service
+
+#### ✔ API Gateway Pattern (KrakenD)
+
+- Enrutamiento hacia el BFF
+- CORS centralizado y rate limit (p. ej. login)
+- **No** valida JWT (responsabilidad del BFF)
+
+#### ✔ Backend for Frontend (BFF)
+
+- Orquesta múltiples microservicios
+- Reduce llamadas desde frontend
+- Adapta respuestas a la UI
+- Utiliza **WebClient** para comunicación entre servicios
+
+#### ✔ Database per Service
+
+Cada microservicio posee su propia base de datos independiente, evitando el acoplamiento.
+
+## 🐳 Contenerización con Docker
+
+Cada componente se ejecuta en su propio contenedor:
+
+- Frontend
+- BFF
+- KrakenD
+- Microservicios
+- Bases de datos
+
+Actualmente el `docker-compose.yml` raíz levanta el stack integrado local con:
+
+- frontend
+- api-gateway (KrakenD)
+- bff-service
+- auth-service
+- postgres-auth
+- donation-service
+- postgres-donation
+
+## ☸️ Ejecutar con Kubernetes (Docker Desktop) — **método principal**
+
+El stack se despliega en el **cluster de Kubernetes**, no con `docker compose up`.
+
+| Comando | Qué hace |
+|---------|----------|
+| `docker build` (vía script) | **Solo construye imágenes** locales que K8s va a usar |
+| `kubectl apply -f k8s.yaml` | **Despliega y ejecuta** pods, services, BD en el cluster |
+| `docker compose up` | *(Opcional)* Entorno alternativo sin K8s — **no usar para la evaluación** |
+
+Guía completa: **[docs/KUBERNETES.md](docs/KUBERNETES.md)** · Pasos concretos: **[docs/EJECUTAR.md](docs/EJECUTAR.md)**
+
+Documentación interactiva de APIs (Swagger): **[docs/API.md](docs/API.md)**
+
+```powershell
+# 1) Construir imágenes (docker build — no levanta la app)
+.\scripts\build-k8s-images.ps1
+
+# 2) Desplegar en Kubernetes
+.\scripts\deploy-k8s.ps1
+# equivalente: kubectl apply -f k8s.yaml
+```
+
+| Servicio | URL (K8s) |
+|----------|-----------|
+| Frontend | http://localhost:30517 |
+| API Gateway | http://localhost:30090 |
 
 ---
 
-## ⚙️ Ejecutar con Docker Compose (raíz del repositorio)
+## ⚙️ Docker Compose *(opcional, solo desarrollo local)*
 
-El **Backend for Frontend (BFF)** está en `backend/bff-service`: expone la API que consume el cliente (`/api/auth/*`, `/api/donations`), valida el JWT donde aplica y actúa como cliente HTTP hacia los microservicios.
+> **Nota:** Si tu entrega/evaluación es con Kubernetes, usa la sección anterior. Compose no crea pods ni services de K8s; levanta contenedores sueltos en Docker Engine.
+
+El **Backend for Frontend (BFF)** está en `backend/bff`: expone la API que consume el cliente (`/api/auth/*`, `/api/donations`), valida el JWT donde aplica y actúa como cliente HTTP hacia los microservicios.
 
 ### Requisitos
 
@@ -30,20 +129,49 @@ docker compose up --build -d
 | Servicio | Puerto en el host | Rol |
 |----------|-------------------|-----|
 | `frontend` | **5173** | UI estática servida con Nginx (`http://localhost:5173`) |
-| `bff-service` | **8080** | BFF Spring Boot: única API HTTP para el navegador |
-| `auth-service` | **8081** | Autenticación y emisión de JWT |
-| `donation-service` | **8082** | CRUD de donaciones |
+| `api-gateway` | **8090** | KrakenD: punto de entrada HTTP para el navegador |
+| `bff-service` | *(solo red Docker)* | BFF Spring Boot; orquesta auth y donation |
+| `auth-service` | *(solo red Docker)* | Autenticación y emisión de JWT |
+| `donation-service` | *(solo red Docker)* | CRUD de donaciones |
+| `logistics-service` | **8084** | CRUD de centros de acopio, inventario y envíos |
 | `postgres-auth` | **5435** | Base de datos del auth-service |
 | `postgres-donation` | **5436** | Base de datos del donation-service |
+| `postgres-logistics` | **5437** | Base de datos del logistics-service |
+
+El código fuente de los microservicios vive en `backend/ms-auth`, `backend/ms-donation` y `backend/ms-logistic`; en `docker-compose.yml` conservan los nombres de servicio `auth-service`, `donation-service` y `logistics-service` para la red interna de Docker.
 
 ### Flujo recomendado
 
 1. Ejecutar `docker compose up --build`.
 2. Abrir el frontend en `http://localhost:5173`.
-3. El frontend consume el BFF en `http://localhost:8080`.
-4. El BFF reenvía las solicitudes a:
+3. El frontend consume el API Gateway en `http://localhost:8090`.
+4. KrakenD reenvía al BFF, que a su vez llama a:
    - `auth-service` para login, registro y validación de token.
    - `donation-service` para el CRUD de donaciones.
+
+**Logística (`logistics-service`):** el servicio ya está disponible en Docker en el puerto **8084**, pero el BFF aún no lo integra. Hasta entonces, se prueba directamente contra la API del microservicio (ver sección siguiente).
+
+### Levantar solo logística
+
+Desde la raíz del proyecto:
+
+```bash
+docker compose up --build postgres-logistics logistics-service
+```
+
+En segundo plano:
+
+```bash
+docker compose up --build -d postgres-logistics logistics-service
+```
+
+Comprobar que responde:
+
+```bash
+curl http://localhost:8084/api/v1/logistics/collection-centers
+```
+
+Respuesta esperada al iniciar: `[]` (lista vacía).
 
 ### Comandos útiles
 
@@ -57,6 +185,7 @@ Ver logs de un servicio:
 
 ```bash
 docker compose logs -f bff-service
+docker compose logs -f logistics-service
 ```
 
 Detener el entorno:
@@ -71,7 +200,7 @@ Detener y eliminar volúmenes:
 docker compose down -v
 ```
 
-**Variable del front (build):** la imagen del frontend inyecta la URL del BFF en tiempo de **build** con `VITE_API_BASE_URL` (por defecto `http://localhost:8080` en `docker-compose.yml`). Si cambias el host o puerto del BFF, reconstruye el servicio `frontend` con el valor correcto para que el navegador pueda llamarlo.
+**Variable del front (build):** la imagen del frontend inyecta la URL del API Gateway en tiempo de **build** con `VITE_API_BASE_URL` (por defecto `http://localhost:8090` en `docker-compose.yml`). Si cambias el host o puerto del gateway, reconstruye el servicio `frontend` con el valor correcto.
 
 **CORS:** el BFF admite orígenes configurables (`APP_CORS_ALLOWED_ORIGINS`); alinealo con la URL desde la que sirves el frontend.
 
@@ -92,7 +221,7 @@ El frontend está desarrollado en **React + TypeScript** y el backend en **Java 
 
 **Documentación / objetivo:** Frontend → BFF → API Gateway (KrakenD) → Microservicios.
 
-**Implementación actual en `docker-compose.yml`:** el navegador solo habla con el **frontend** y el **BFF**; el BFF llama por HTTP a **auth-service** y **donation-service** (sin KrakenD en este compose; el gateway puede incorporarse después).
+**Implementación actual en `docker-compose.yml`:** el navegador solo habla con el **frontend** y el **BFF**; el BFF llama por HTTP a **auth-service** y **donation-service**. **logistics-service** está definido en el compose y expone su API en el puerto **8084**, pero aún no es consumido por el BFF ni por el frontend (sin KrakenD en este compose; el gateway puede incorporarse después).
 
 ---
 
@@ -145,10 +274,15 @@ Cada componente se ejecuta en su propio contenedor:
 Actualmente el `docker-compose.yml` raíz levanta el stack integrado local con:
 
 - frontend
+- bff-service
 - auth-service
 - postgres-auth
 - donation-service
 - postgres-donation
+- logistics-service
+- postgres-logistics
+
+Con `docker compose up --build` se levantan todos los servicios anteriores. Para probar solo logística, usar `docker compose up --build postgres-logistics logistics-service`.
 
 ---
 
@@ -156,16 +290,14 @@ Actualmente el `docker-compose.yml` raíz levanta el stack integrado local con:
 
 Se implementa el patrón **Database per Service**, donde cada microservicio tiene su propia base de datos en Docker.
 
-## ✔ Distribución
+### ✔ Distribución
 
 - auth-service → auth-db
 - donations-service → donations-db
 - needs-service → needs-db
 - logistics-service → logistics-db
 
----
-
-## 🔗 Conexión
+### 🔗 Conexión
 
 Los microservicios se conectan a su base de datos mediante el nombre del contenedor:
 
@@ -173,46 +305,37 @@ Los microservicios se conectan a su base de datos mediante el nombre del contene
 spring.datasource.url=jdbc:postgresql://auth-db:5432/auth-db
 ```
 
----
-
-## ⚠️ Restricciones
+### ⚠️ Restricciones
 
 - No se comparten bases de datos
 - No existen relaciones entre bases de datos
 - Comunicación solo vía HTTP
 
----
-
-## ✔ Beneficios
+### ✔ Beneficios
 
 - Bajo acoplamiento
 - Escalabilidad independiente
 - Aislamiento de fallos
 
----
-
-# 🛠️ Migraciones de Base de Datos con Flyway
+## 🛠️ Migraciones de Base de Datos con Flyway
 
 El proyecto utiliza **Flyway** para gestionar las migraciones de base de datos de cada microservicio.
 
 Flyway permite versionar los cambios de la base de datos mediante archivos SQL, evitando crear tablas manualmente en PostgreSQL.  
 Al iniciar cada microservicio, Spring Boot detecta Flyway, busca las migraciones pendientes y las ejecuta automáticamente sobre la base de datos correspondiente.
 
----
-
-## ✔ ¿Para qué usamos Flyway?
+### ✔ ¿Para qué usamos Flyway?
 
 Flyway se utiliza para:
 
 - Crear las tablas iniciales de cada microservicio.
+- Cargar datos iniciales de demo (semilla), por ejemplo en `ms-necessity` mediante `V3__seed_necessities.sql`.
 - Versionar los cambios de la base de datos.
 - Evitar diferencias entre las bases de datos de los integrantes del equipo.
 - Permitir que el proyecto sea reproducible localmente.
 - Mantener controlado el historial de cambios de la base de datos.
 
----
-
-## 🔄 Flujo de migración
+### 🔄 Flujo de migración
 
 ```txt
 Docker Compose levanta PostgreSQL
@@ -228,19 +351,17 @@ PostgreSQL crea o actualiza las tablas
 Flyway registra el historial en flyway_schema_history
 ```
 
-# 🔄 Comunicación entre Servicios
+## 🔄 Comunicación entre Servicios
 
 La comunicación se realiza mediante **HTTP REST** utilizando **Spring WebClient**.
 
-## ✔ WebClient
+### ✔ WebClient
 
 - Cliente HTTP no bloqueante
 - Permite llamadas asincrónicas
 - Usado principalmente en el BFF
 
----
-
-## 📌 Ejemplo
+### 📌 Ejemplo
 
 ```java
 WebClient webClient = WebClient.create("http://donations-service");
@@ -251,9 +372,7 @@ webClient.get()
     .bodyToMono(String.class);
 ```
 
----
-
-# 🧠 Patrones de Diseño
+## 🧠 Patrones de Diseño
 
 ### ✔ Repository Pattern
 
@@ -267,17 +386,15 @@ Creación de objetos.
 
 Manejo de fallos entre servicios.
 
----
+## 🔐 Microservicio de Autenticación
 
-# 🔐 Microservicio de Autenticación
-
-## 📌 Responsabilidad
+### 📌 Responsabilidad
 
 Gestión de usuarios y autenticación mediante JWT.
 
-## 🧩 Entidad
+### 🧩 Entidad
 
-### Usuario
+#### Usuario
 
 | Atributo   | Tipo               |
 | ---------- | ------------------ |
@@ -286,22 +403,20 @@ Gestión de usuarios y autenticación mediante JWT.
 | password   | String             |
 | rol        | ENUM (ADMIN, USER) |
 
-## 🔗 Relaciones
+### 🔗 Relaciones
 
 - Usuario independiente
 - Rol como ENUM
 
----
+## 🎁 Microservicio de Donaciones
 
-# 🎁 Microservicio de Donaciones
-
-## 📌 Responsabilidad
+### 📌 Responsabilidad
 
 Gestión del ingreso de recursos.
 
-## 🧩 Entidades
+### 🧩 Entidades
 
-### Donante
+#### Donante
 
 | Atributo   | Tipo   |
 | ---------- | ------ |
@@ -309,18 +424,14 @@ Gestión del ingreso de recursos.
 | nombre     | String |
 | contacto   | String |
 
----
-
-### Recurso
+#### Recurso
 
 | Atributo   | Tipo   |
 | ---------- | ------ |
 | id_recurso | PK     |
 | tipo       | String |
 
----
-
-### Donacion
+#### Donacion
 
 | Atributo    | Tipo    |
 | ----------- | ------- |
@@ -330,9 +441,7 @@ Gestión del ingreso de recursos.
 | estado      | ENUM    |
 | id_donante  | FK      |
 
----
-
-### Donacion_Recurso
+#### Donacion_Recurso
 
 | Atributo    | Tipo |
 | ----------- | ---- |
@@ -340,26 +449,34 @@ Gestión del ingreso de recursos.
 | id_donacion | FK   |
 | id_recurso  | FK   |
 
----
-
-## 🔗 Relaciones
+### 🔗 Relaciones
 
 - Donante **1:N** Donacion
 - Donacion **N:M** Recurso
 - Donacion **1:N** Donacion_Recurso
 - Recurso **1:N** Donacion_Recurso
 
----
+## 📍 Microservicio de Necesidades
 
-# 📍 Microservicio de Necesidades
+### 📌 Responsabilidad
 
-## 📌 Responsabilidad
+Registrar necesidades en terreno reportadas por municipalidades y centros investigadores.
 
-Registrar necesidades.
+### 🌱 Datos iniciales (semilla)
 
-## 🧩 Entidades
+`necessity-service` carga automáticamente **10 necesidades de ejemplo** al iniciar, mediante la migración Flyway `V3__seed_necessities.sql`. El escenario simula una emergencia regional en el área de Valparaíso (ropa, agua, alimentos, higiene e insumos médicos).
 
-### Necesidad
+Para verificar:
+
+```bash
+curl http://localhost:8083/api/v1/necessities
+```
+
+Detalle completo de los registros y consideraciones de recarga en [`backend/ms-necessity/README.md`](backend/ms-necessity/README.md).
+
+### 🧩 Entidades
+
+#### Necesidad
 
 | Atributo     | Tipo    |
 | ------------ | ------- |
@@ -369,27 +486,21 @@ Registrar necesidades.
 | estado       | ENUM    |
 | id_ubicacion | FK      |
 
----
-
-### Recurso
+#### Recurso
 
 | Atributo   | Tipo   |
 | ---------- | ------ |
 | id_recurso | PK     |
 | tipo       | String |
 
----
-
-### Ubicacion
+#### Ubicacion
 
 | Atributo     | Tipo   |
 | ------------ | ------ |
 | id_ubicacion | PK     |
 | direccion    | String |
 
----
-
-### Necesidad_Recurso
+#### Necesidad_Recurso
 
 | Atributo     | Tipo |
 | ------------ | ---- |
@@ -397,26 +508,22 @@ Registrar necesidades.
 | id_necesidad | FK   |
 | id_recurso   | FK   |
 
----
-
-## 🔗 Relaciones
+### 🔗 Relaciones
 
 - Necesidad **N:1** Ubicacion
 - Necesidad **N:M** Recurso
 - Necesidad **1:N** Necesidad_Recurso
 - Recurso **1:N** Necesidad_Recurso
 
----
+## 🚚 Microservicio de Logística
 
-# 🚚 Microservicio de Logística
-
-## 📌 Responsabilidad
+### 📌 Responsabilidad
 
 Gestión de almacenamiento y distribución.
 
-## 🧩 Entidades
+### 🧩 Entidades
 
-### CentroAcopio
+#### CentroAcopio
 
 | Atributo  | Tipo   |
 | --------- | ------ |
@@ -424,9 +531,7 @@ Gestión de almacenamiento y distribución.
 | nombre    | String |
 | ubicacion | String |
 
----
-
-### Inventario
+#### Inventario
 
 | Atributo      | Tipo    |
 | ------------- | ------- |
@@ -435,9 +540,7 @@ Gestión de almacenamiento y distribución.
 | recurso       | String  |
 | cantidad      | Integer |
 
----
-
-### Envio
+#### Envio
 
 | Atributo  | Tipo |
 | --------- | ---- |
@@ -446,27 +549,129 @@ Gestión de almacenamiento y distribución.
 | estado    | ENUM |
 | id_centro | FK   |
 
----
-
-## 🔗 Relaciones
+### 🔗 Relaciones
 
 - CentroAcopio **1:N** Inventario
 - CentroAcopio **1:N** Envio
 - Inventario **N:1** CentroAcopio
 - Envio **N:1** CentroAcopio
 
----
+## 🚀 Tecnologías
 
-# 🔄 Git Flow
+- Java 21
+- Spring Boot 3.3.x
+- Gradle (Groovy DSL)
+- PostgreSQL
+- Docker
+- KrakenD
+- React
+- TypeScript
+- WebClient
+- Resilience4j
+- Flyway
 
-## 🌿 Ramas
+## 🔒 Seguridad
+
+- JWT
+- Validación en KrakenD
+- Control de roles
+
+## 📈 Escalabilidad
+
+Cada microservicio escala de forma independiente.
+
+## Requerimientos funcionales
+
+Describen qué debe hacer el sistema en relación con la ayuda humanitaria y la gestión operativa de donaciones, necesidades y logística.
+
+### Plataforma general
+
+- Permitir registrar y dar seguimiento a donaciones de recursos.
+- Permitir registrar necesidades en terreno asociadas a ubicaciones y recursos.
+- Permitir coordinar la logística de almacenamiento y distribución (centros, inventario, envíos).
+
+### Autenticación y usuarios (auth-service)
+
+- Gestionar usuarios con identificación por correo electrónico y contraseña.
+- Asignar roles (ADMIN, USER) para distinguir permisos de uso.
+- Autenticar credenciales y emitir tokens JWT para sesiones de API.
+- Validar el JWT en las rutas protegidas según el diseño de seguridad (BFF y/o API Gateway).
+
+### Donaciones (donation-service)
+
+- Administrar donantes (datos de contacto y nombre).
+- Administrar el catálogo de recursos (tipo de recurso).
+- Registrar donaciones con fecha, cantidad, estado y relación con el donante.
+- Asociar cada donación con uno o más recursos según el modelo de dominio.
+
+### Necesidades (needs-service)
+
+- Registrar necesidades con cantidad, prioridad y estado.
+- Vincular necesidades a una ubicación y a los recursos requeridos.
+
+### Logística (logistics-service)
+
+- Gestionar centros de acopio (identificación y ubicación).
+- Mantener inventario por centro (recurso y cantidad disponible).
+- Registrar envíos con fecha, estado y centro involucrado.
+
+### Cliente web (frontend y BFF)
+
+- Exponer al navegador una API consolidada vía el BFF (por ejemplo rutas de autenticación y donaciones), reduciendo acoplamiento del front con múltiples microservicios.
+- Orquestar en el BFF las llamadas HTTP a los microservicios y adaptar las respuestas a las necesidades de la interfaz.
+
+### Integración entre servicios
+
+- Comunicar dominios únicamente por HTTP/REST, sin compartir bases de datos entre microservicios.
+
+## Requerimientos no funcionales
+
+Describen cómo debe comportarse el sistema (calidades, restricciones técnicas y operativas), más allá de las funciones de negocio.
+
+### Arquitectura y despliegue
+
+- Implementar arquitectura de microservicios separada por dominio (autenticación, donaciones, necesidades, logística).
+- Contenerizar cada componente con Docker y permitir orquestación local mediante Docker Compose.
+- Aplicar el patrón Database per Service: cada microservicio con su propia instancia/base PostgreSQL, sin relaciones entre bases de datos de otros servicios.
+
+### API y experiencia de cliente
+
+- Utilizar un Backend for Frontend (BFF) como punto de entrada HTTP para el navegador, con CORS configurable según el origen del frontend.
+- Contemplar un API Gateway (KrakenD) para enrutamiento centralizado y validación de JWT a nivel de entrada (según el despliegue elegido).
+
+### Seguridad
+
+- Autenticación basada en JWT (stateless).
+- Autorización por roles para operaciones sensibles o administrativas.
+
+### Resiliencia y rendimiento de integración
+
+- Usar cliente HTTP no bloqueante (WebClient) en la orquestación del BFF.
+- Incorporar patrón Circuit Breaker (Resilience4j) para degradación controlada ante fallos entre servicios.
+
+### Datos y reproducibilidad
+
+- Versionar el esquema de cada base con Flyway, ejecutando migraciones al iniciar cada servicio para entornos reproducibles.
+
+### Escalabilidad y mantenibilidad
+
+- Permitir escalar servicios de forma independiente según la carga de cada dominio.
+- Mantener bajo acoplamiento entre equipos y componentes y aislar fallos entre microservicios.
+
+### Stack tecnológico
+
+- Backend en Java 21 y Spring Boot; construcción con Gradle (Groovy DSL).
+- Frontend en React y TypeScript.
+- Persistencia en PostgreSQL por servicio.
+
+## 🔄 Git Flow
+
+### 🌿 Ramas
 
 - main → producción
 - develop → integración
 
----
-
-## 🌱 Flujo de trabajo
+### 🌱 Flujo de trabajo
 
 1. Antes de crear una feature:
 
@@ -494,7 +699,6 @@ git push origin feature/nombre-feature
 api/auth/register
 api/auth/login
 
-
 - feature → develop
 - Permite revisión de código
 
@@ -504,134 +708,13 @@ api/auth/login
 
 - merge develop → main
 
----
-
-## 🎯 Objetivo
+### 🎯 Objetivo
 
 - Trabajo colaborativo
 - Control de versiones
 - Estabilidad
 
----
-
-# 🔒 Seguridad
-
-- JWT
-- Validación en KrakenD
-- Control de roles
-
----
-
-# 📈 Escalabilidad
-
-Cada microservicio escala de forma independiente.
-
----
-
-# 🚀 Tecnologías
-
-- Java 21
-- Spring Boot 3.3.x
-- Gradle (Groovy DSL)
-- PostgreSQL
-- Docker
-- KrakenD
-- React
-- TypeScript
-- WebClient
-- Resilience4j
-- Flyway
-
----
-
-# Requerimientos funcionales
-
-Describen qué debe hacer el sistema en relación con la ayuda humanitaria y la gestión operativa de donaciones, necesidades y logística.
-
-## Plataforma general
-
-- Permitir registrar y dar seguimiento a donaciones de recursos.
-- Permitir registrar necesidades en terreno asociadas a ubicaciones y recursos.
-- Permitir coordinar la logística de almacenamiento y distribución (centros, inventario, envíos).
-
-## Autenticación y usuarios (auth-service)
-
-- Gestionar usuarios con identificación por correo electrónico y contraseña.
-- Asignar roles (ADMIN, USER) para distinguir permisos de uso.
-- Autenticar credenciales y emitir tokens JWT para sesiones de API.
-- Validar el JWT en las rutas protegidas según el diseño de seguridad (BFF y/o API Gateway).
-
-## Donaciones (donation-service)
-
-- Administrar donantes (datos de contacto y nombre).
-- Administrar el catálogo de recursos (tipo de recurso).
-- Registrar donaciones con fecha, cantidad, estado y relación con el donante.
-- Asociar cada donación con uno o más recursos según el modelo de dominio.
-
-## Necesidades (needs-service)
-
-- Registrar necesidades con cantidad, prioridad y estado.
-- Vincular necesidades a una ubicación y a los recursos requeridos.
-
-## Logística (logistics-service)
-
-- Gestionar centros de acopio (identificación y ubicación).
-- Mantener inventario por centro (recurso y cantidad disponible).
-- Registrar envíos con fecha, estado y centro involucrado.
-
-## Cliente web (frontend y BFF)
-
-- Exponer al navegador una API consolidada vía el BFF (por ejemplo rutas de autenticación y donaciones), reduciendo acoplamiento del front con múltiples microservicios.
-- Orquestar en el BFF las llamadas HTTP a los microservicios y adaptar las respuestas a las necesidades de la interfaz.
-
-## Integración entre servicios
-
-- Comunicar dominios únicamente por HTTP/REST, sin compartir bases de datos entre microservicios.
-
-
-
-# Requerimientos no funcionales
-
-Describen cómo debe comportarse el sistema (calidades, restricciones técnicas y operativas), más allá de las funciones de negocio.
-
-## Arquitectura y despliegue
-
-- Implementar arquitectura de microservicios separada por dominio (autenticación, donaciones, necesidades, logística).
-- Contenerizar cada componente con Docker y permitir orquestación local mediante Docker Compose.
-- Aplicar el patrón Database per Service: cada microservicio con su propia instancia/base PostgreSQL, sin relaciones entre bases de datos de otros servicios.
-
-## API y experiencia de cliente
-
-- Utilizar un Backend for Frontend (BFF) como punto de entrada HTTP para el navegador, con CORS configurable según el origen del frontend.
-- Contemplar un API Gateway (KrakenD) para enrutamiento centralizado y validación de JWT a nivel de entrada (según el despliegue elegido).
-
-## Seguridad
-
-- Autenticación basada en JWT (stateless).
-- Autorización por roles para operaciones sensibles o administrativas.
-
-## Resiliencia y rendimiento de integración
-
-- Usar cliente HTTP no bloqueante (WebClient) en la orquestación del BFF.
-- Incorporar patrón Circuit Breaker (Resilience4j) para degradación controlada ante fallos entre servicios.
-
-## Datos y reproducibilidad
-
-- Versionar el esquema de cada base con Flyway, ejecutando migraciones al iniciar cada servicio para entornos reproducibles.
-
-## Escalabilidad y mantenibilidad
-
-- Permitir escalar servicios de forma independiente según la carga de cada dominio.
-- Mantener bajo acoplamiento entre equipos y componentes y aislar fallos entre microservicios.
-
-## Stack tecnológico
-
-- Backend en Java 21 y Spring Boot; construcción con Gradle (Groovy DSL).
-- Frontend en React y TypeScript.
-- Persistencia en PostgreSQL por servicio.
-
-
-# ✅ Conclusión
+## ✅ Conclusión
 
 La arquitectura permite construir un sistema:
 
@@ -640,12 +723,8 @@ La arquitectura permite construir un sistema:
 - Mantenible
 - Preparado para crecimiento
 
----
-
-# 👨‍💻 Integrantes
+## 👨‍💻 Integrantes
 
 - Nelson Cofré
 - Nicolas Sanchez
 - Mario Cofré
-
----

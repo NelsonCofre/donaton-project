@@ -1,31 +1,76 @@
 {
+
   "configurations": [
+
     {
+
       "type": "java",
+
+      "name": "LogisticsServiceApplication",
+
+      "request": "launch",
+
+      "mainClass": "com.donaton.logistics.LogisticsServiceApplication",
+
+      "projectName": "logistics-service"
+
+    },
+
+    {
+
+      "type": "java",
+
       "name": "DonationServiceApplication",
+
       "request": "launch",
+
       "mainClass": "com.donaton.donation.DonationServiceApplication",
+
       "projectName": "donation-service"
+
     },
+
     {
+
       "type": "java",
+
       "name": "Spring Boot-AuthServiceApplication<auth-service>",
+
       "request": "launch",
+
       "cwd": "${workspaceFolder}",
+
       "mainClass": "com.donaton.auth.AuthServiceApplication",
+
       "projectName": "auth-service",
+
       "args": "",
+
       "envFile": "${workspaceFolder}/.env"
+
     },
+
     {
+
       "type": "java",
+
       "name": "Spring Boot-NecessityServiceApplication<necessity-service>",
+
       "request": "launch",
+
       "cwd": "${workspaceFolder}",
+
       "mainClass": "com.donaton.necessity.NecessityServiceApplication",
+
       "projectName": "necessity-service",
+
       "args": "",
+
       "envFile": "${workspaceFolder}/.env"
+
     }
+
   ]
+
 }
+

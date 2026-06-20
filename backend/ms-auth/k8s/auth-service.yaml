@@ -1,0 +1,178 @@
+# PostgreSQL del microservicio de autenticación (database per service).
+# Service DNS interno: postgres-auth.donaton.svc.cluster.local:5432
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-auth-secret
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-auth
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+type: Opaque
+stringData:
+  POSTGRES_USER: root
+  POSTGRES_PASSWORD: Informatica.25
+  POSTGRES_DB: auth-db
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-auth
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-auth
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app.kubernetes.io/name: postgres-auth
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-auth
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-auth
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  serviceName: postgres-auth
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres-auth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres-auth
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: postgres-auth-secret
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - root
+                - -d
+                - auth-db
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - root
+                - -d
+                - auth-db
+            initialDelaySeconds: 15
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: auth-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth-service
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: microservice
+    spec:
+      containers:
+        - name: auth-service
+          image: donaton/ms-auth:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+              name: http
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-auth:5432/auth-db
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-auth-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-auth-secret
+                  key: POSTGRES_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: donaton-shared-secret
+                  key: jwt-secret
+          readinessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: auth-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8081
+      targetPort: 8081
+      name: http
+  selector:
+    app.kubernetes.io/name: auth-service

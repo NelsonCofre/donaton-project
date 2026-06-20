@@ -3,6 +3,15 @@
  * Valores de estado son orientativos hasta que el API los fije.
  */
 export type DonacionEstado = 'PENDIENTE' | 'RECIBIDA' | 'ASIGNADA' | 'CANCELADA'
+export type DonationSortField = 'id' | 'fecha' | 'cantidad'
+export type DonationSortDirection = 'asc' | 'desc'
+
+export interface DonationFilters {
+  query: string
+  estado: DonacionEstado | 'TODOS'
+  sortBy: DonationSortField
+  sortDirection: DonationSortDirection
+}
 
 export interface Donante {
   idDonante: number

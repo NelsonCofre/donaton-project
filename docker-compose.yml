@@ -4,27 +4,42 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8090}
+        VITE_NECESSITY_API_BASE_URL: ${VITE_NECESSITY_API_BASE_URL:-http://localhost:8090}
+        VITE_LOGISTICS_API_BASE_URL: ${VITE_LOGISTICS_API_BASE_URL:-http://localhost:8090}
     ports:
       - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - api-gateway
+
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "${API_GATEWAY_PORT:-8090}:8090"
     depends_on:
       - bff-service
 
   bff-service:
     build:
-      context: ./backend/bff-service
+      context: ./backend/bff
       dockerfile: Dockerfile
-    ports:
-      - "${BFF_PORT:-8080}:8080"
     environment:
       SERVER_PORT: 8080
       APP_SERVICES_AUTH_BASE_URL: http://auth-service:8081
       APP_SERVICES_DONATION_BASE_URL: http://donation-service:8082
+      APP_SERVICES_NECESSITY_BASE_URL: http://necessity-service:8083
+      APP_SERVICES_LOGISTICS_BASE_URL: http://logistics-service:8084
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
     depends_on:
       auth-service:
         condition: service_started
       donation-service:
+        condition: service_started
+      necessity-service:
+        condition: service_started
+      logistics-service:
         condition: service_started
 
   postgres-auth:
@@ -45,10 +60,9 @@ services:
 
   auth-service:
     build:
-      context: ./backend/auth-service
+      context: ./backend/ms-auth
       dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
+    # Sin puerto en el host: solo accesible vía BFF en la red Docker (evita choque con otros proyectos).
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth-db
       SPRING_DATASOURCE_USERNAME: root
@@ -79,11 +93,10 @@ services:
 
   donation-service:
     build:
-      context: ./backend/donation-service
+      context: ./backend/ms-donation
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "${DONATION_SERVICE_PORT:-8082}:${SERVER_PORT:-8082}"
+    # Sin puerto en el host: solo accesible vía BFF en la red Docker.
     environment:
       SERVER_PORT: ${SERVER_PORT:-8082}
       SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME:-donation-service}
@@ -98,6 +111,86 @@ services:
       postgres-donation:
         condition: service_healthy
 
+  postgres-logistics:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${LOGISTICS_POSTGRES_USER:-logistic}
+      POSTGRES_PASSWORD: ${LOGISTICS_POSTGRES_PASSWORD:-logistic}
+      POSTGRES_DB: ${LOGISTICS_POSTGRES_DB:-logistics_db}
+    ports:
+      - "${LOGISTICS_POSTGRES_PUBLISH_PORT:-5437}:5432"
+    volumes:
+      - logistics-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  logistics-service:
+    build:
+      context: ./backend/ms-logistic
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${LOGISTICS_SERVICE_PORT:-8084}:${LOGISTICS_SERVER_PORT:-8084}"
+    environment:
+      SERVER_PORT: ${LOGISTICS_SERVER_PORT:-8084}
+      SPRING_APPLICATION_NAME: ${LOGISTICS_SPRING_APPLICATION_NAME:-logistics-service}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-logistics:5432/${LOGISTICS_POSTGRES_DB:-logistics_db}
+      SPRING_DATASOURCE_USERNAME: ${LOGISTICS_POSTGRES_USER:-logistic}
+      SPRING_DATASOURCE_PASSWORD: ${LOGISTICS_POSTGRES_PASSWORD:-logistic}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}
+      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
+      SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
+    depends_on:
+      postgres-logistics:
+        condition: service_healthy
+
+  postgres-necessity:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${NECESSITY_POSTGRES_USER:-necessity}
+      POSTGRES_PASSWORD: ${NECESSITY_POSTGRES_PASSWORD:-necessity}
+      POSTGRES_DB: ${NECESSITY_POSTGRES_DB:-necessity_db}
+    ports:
+      - "${NECESSITY_POSTGRES_PUBLISH_PORT:-5438}:5432"
+    volumes:
+      - necessity-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  necessity-service:
+    build:
+      context: ./backend/ms-necessity
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${NECESSITY_SERVICE_PORT:-8083}:${NECESSITY_SERVER_PORT:-8083}"
+    environment:
+      SERVER_PORT: ${NECESSITY_SERVER_PORT:-8083}
+      SPRING_APPLICATION_NAME: ${NECESSITY_SPRING_APPLICATION_NAME:-necessity-service}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-necessity:5432/${NECESSITY_POSTGRES_DB:-necessity_db}
+      SPRING_DATASOURCE_USERNAME: ${NECESSITY_POSTGRES_USER:-necessity}
+      SPRING_DATASOURCE_PASSWORD: ${NECESSITY_POSTGRES_PASSWORD:-necessity}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}
+      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
+      SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
+    depends_on:
+      postgres-necessity:
+        condition: service_healthy
+
 volumes:
   postgres-auth-data:
   donation-pg-data:
+  logistics-pg-data:
+  necessity-pg-data:

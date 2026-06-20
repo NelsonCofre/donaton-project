@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { ApiError } from '@/shared/api/client'
-import { createDonacion, type CreateDonacionRequest } from '@/entities/donation'
+import {
+  createDonacion,
+  type CreateDonacionRequest,
+  type Donacion,
+} from '@/entities/donation'
 import { DonationForm } from '@/features/donation-form'
 
 type CreateDonationFormProps = {
-  onCreated: () => void
+  onCreated?: (donacion: Donacion) => void
 }
 
 export function CreateDonationForm({ onCreated }: CreateDonationFormProps) {
@@ -18,13 +22,13 @@ export function CreateDonationForm({ onCreated }: CreateDonationFormProps) {
     setSuccess(null)
     setLoading(true)
     try {
-      await createDonacion({
+      const donacion = await createDonacion({
         ...values,
         fecha: new Date(values.fecha).toISOString(),
       })
       setSuccess('Donación registrada correctamente.')
       setFormKey((k) => k + 1)
-      onCreated()
+      onCreated?.(donacion)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo crear la donación.')
     } finally {

@@ -1,0 +1,886 @@
+﻿# =============================================================================
+# Donaton â€” Manifiesto raÃ­z de Kubernetes
+# =============================================================================
+# Recursos compartidos del namespace. Cada microservicio tiene sus manifiestos
+# en su propia carpeta k8s/ (ver docs/KUBERNETES.md).
+#
+# Despliegue completo (desde la raÃ­z del repo):
+#   .\scripts\deploy-k8s.ps1
+# =============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: donaton
+  labels:
+    app.kubernetes.io/part-of: donaton
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: donaton-shared-secret
+  namespace: donaton
+  labels:
+    app.kubernetes.io/part-of: donaton
+type: Opaque
+stringData:
+  # Mismo valor por defecto que docker-compose (auth-service).
+  jwt-secret: default-local-auth-secret-minimum-32-characters-long!!
+# PostgreSQL del microservicio de autenticaciÃ³n (database per service).
+# Service DNS interno: postgres-auth.donaton.svc.cluster.local:5432
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-auth-secret
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-auth
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+type: Opaque
+stringData:
+  POSTGRES_USER: root
+  POSTGRES_PASSWORD: Informatica.25
+  POSTGRES_DB: auth-db
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-auth
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-auth
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app.kubernetes.io/name: postgres-auth
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-auth
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-auth
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  serviceName: postgres-auth
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres-auth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres-auth
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: postgres-auth-secret
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - root
+                - -d
+                - auth-db
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - root
+                - -d
+                - auth-db
+            initialDelaySeconds: 15
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: auth-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth-service
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: microservice
+    spec:
+      containers:
+        - name: auth-service
+          image: donaton/ms-auth:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+              name: http
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-auth:5432/auth-db
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-auth-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-auth-secret
+                  key: POSTGRES_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: donaton-shared-secret
+                  key: jwt-secret
+          readinessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: auth-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8081
+      targetPort: 8081
+      name: http
+  selector:
+    app.kubernetes.io/name: auth-service
+# PostgreSQL del microservicio de donaciones.
+# Service DNS interno: postgres-donation.donaton.svc.cluster.local:5432
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-donation-secret
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-donation
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+type: Opaque
+stringData:
+  POSTGRES_USER: donation
+  POSTGRES_PASSWORD: donation
+  POSTGRES_DB: donation_db
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-donation
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-donation
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app.kubernetes.io/name: postgres-donation
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-donation
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-donation
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  serviceName: postgres-donation
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres-donation
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres-donation
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: postgres-donation-secret
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - donation
+                - -d
+                - donation_db
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - donation
+                - -d
+                - donation_db
+            initialDelaySeconds: 15
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: donation-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: donation-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: donation-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: donation-service
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: microservice
+    spec:
+      containers:
+        - name: donation-service
+          image: donaton/ms-donation:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+              name: http
+          env:
+            - name: SERVER_PORT
+              value: "8082"
+            - name: SPRING_APPLICATION_NAME
+              value: donation-service
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-donation:5432/donation_db
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-donation-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-donation-secret
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: validate
+            - name: SPRING_FLYWAY_ENABLED
+              value: "true"
+          readinessProbe:
+            tcpSocket:
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: donation-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: donation-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8082
+      targetPort: 8082
+      name: http
+  selector:
+    app.kubernetes.io/name: donation-service
+# PostgreSQL del microservicio de logÃ­stica.
+# Service DNS interno: postgres-logistics.donaton.svc.cluster.local:5432
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-logistics-secret
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-logistics
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+type: Opaque
+stringData:
+  POSTGRES_USER: logistic
+  POSTGRES_PASSWORD: logistic
+  POSTGRES_DB: logistics_db
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-logistics
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-logistics
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app.kubernetes.io/name: postgres-logistics
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-logistics
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-logistics
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  serviceName: postgres-logistics
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres-logistics
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres-logistics
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: postgres-logistics-secret
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - logistic
+                - -d
+                - logistics_db
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - logistic
+                - -d
+                - logistics_db
+            initialDelaySeconds: 15
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logistics-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: logistics-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: logistics-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: logistics-service
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: microservice
+    spec:
+      containers:
+        - name: logistics-service
+          image: donaton/ms-logistic:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+              name: http
+          env:
+            - name: SERVER_PORT
+              value: "8084"
+            - name: SPRING_APPLICATION_NAME
+              value: logistics-service
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-logistics:5432/logistics_db
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-logistics-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-logistics-secret
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: validate
+            - name: SPRING_FLYWAY_ENABLED
+              value: "true"
+          readinessProbe:
+            tcpSocket:
+              port: 8084
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8084
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logistics-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: logistics-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  type: NodePort
+  ports:
+    - port: 8084
+      targetPort: 8084
+      nodePort: 30084
+      name: http
+  selector:
+    app.kubernetes.io/name: logistics-service
+# PostgreSQL del microservicio de necesidades.
+# Service DNS interno: postgres-necessity.donaton.svc.cluster.local:5432
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-necessity-secret
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-necessity
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+type: Opaque
+stringData:
+  POSTGRES_USER: necessity
+  POSTGRES_PASSWORD: necessity
+  POSTGRES_DB: necessity_db
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-necessity
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-necessity
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app.kubernetes.io/name: postgres-necessity
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-necessity
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: postgres-necessity
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: database
+spec:
+  serviceName: postgres-necessity
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres-necessity
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres-necessity
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: postgres-necessity-secret
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - necessity
+                - -d
+                - necessity_db
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - necessity
+                - -d
+                - necessity_db
+            initialDelaySeconds: 15
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: necessity-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: necessity-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: necessity-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: necessity-service
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: microservice
+    spec:
+      containers:
+        - name: necessity-service
+          image: donaton/ms-necessity:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+              name: http
+          env:
+            - name: SERVER_PORT
+              value: "8083"
+            - name: SPRING_APPLICATION_NAME
+              value: necessity-service
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-necessity:5432/necessity_db
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-necessity-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-necessity-secret
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: validate
+            - name: SPRING_FLYWAY_ENABLED
+              value: "true"
+          readinessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: necessity-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: necessity-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: microservice
+spec:
+  type: NodePort
+  ports:
+    - port: 8083
+      targetPort: 8083
+      nodePort: 30083
+      name: http
+  selector:
+    app.kubernetes.io/name: necessity-service
+# Backend for Frontend (BFF): orquesta auth-service y donation-service.
+# Expuesto al navegador vÃ­a NodePort 30080 (equivalente al puerto 8080 de Compose).
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bff-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: bff-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: bff
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bff-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bff-service
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: bff
+    spec:
+      containers:
+        - name: bff-service
+          image: donaton/bff:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+            - name: APP_SERVICES_AUTH_BASE_URL
+              value: http://auth-service:8081
+            - name: APP_SERVICES_DONATION_BASE_URL
+              value: http://donation-service:8082
+            - name: APP_CORS_ALLOWED_ORIGINS
+              value: http://localhost:30517
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bff-service
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: bff-service
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: bff
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+      name: http
+  selector:
+    app.kubernetes.io/name: bff-service
+# Frontend React (Nginx). La imagen debe construirse con:
+#   --build-arg VITE_API_BASE_URL=http://localhost:30080
+# Expuesto al navegador vÃ­a NodePort 30517 (equivalente al 5173 de Compose).
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: donaton/frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: frontend
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30517
+      name: http
+  selector:
+    app.kubernetes.io/name: frontend

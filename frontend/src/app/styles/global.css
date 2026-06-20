@@ -1,44 +1,40 @@
 :root {
-  --text: #4b5563;
-  --text-h: #111827;
-  --bg: #f4f6f9;
+  --text: #475569;
+  --text-strong: #0f172a;
+  --text-soft: #64748b;
+  --bg: #edf2f7;
+  --bg-strong: #dbe4ee;
   --surface: #ffffff;
-  --border: #e2e8f0;
-  --error: #b91c1c;
-  --error-bg: #fef2f2;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
-  --radius: 8px;
-  --radius-lg: 12px;
-  --shadow-auth:
-    0 1px 2px rgba(15, 23, 42, 0.06),
-    0 12px 40px -12px rgba(15, 23, 42, 0.12);
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --surface-muted: #f8fafc;
+  --surface-strong: #e2e8f0;
+  --border: #d7e0ea;
+  --accent: #0f766e;
+  --accent-strong: #115e59;
+  --accent-soft: rgba(15, 118, 110, 0.12);
+  --info: #2563eb;
+  --info-soft: rgba(37, 99, 235, 0.12);
+  --success: #15803d;
+  --success-soft: rgba(21, 128, 61, 0.12);
+  --warning: #b45309;
+  --warning-soft: rgba(180, 83, 9, 0.14);
+  --danger: #b91c1c;
+  --danger-soft: rgba(185, 28, 28, 0.12);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 10px 30px -18px rgba(15, 23, 42, 0.22);
+  --shadow-lg: 0 22px 60px -30px rgba(15, 23, 42, 0.28);
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --sans:
+    "IBM Plex Sans", "Segoe UI", "Aptos", "Helvetica Neue", Arial, sans-serif;
   font: 16px/1.5 var(--sans);
   color: var(--text);
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.09), transparent 28%),
+    linear-gradient(180deg, #f7fafc 0%, var(--bg) 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #cbd5e1;
-    --text-h: #f8fafc;
-    --bg: #0f172a;
-    --surface: #1e293b;
-    --border: #334155;
-    --error: #fca5a5;
-    --error-bg: #450a0a;
-    --accent: #60a5fa;
-    --accent-hover: #93c5fd;
-    --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
-    --shadow-auth:
-      0 1px 2px rgba(0, 0, 0, 0.2),
-      0 16px 48px -12px rgba(0, 0, 0, 0.45);
-  }
 }
 
 *,
@@ -47,8 +43,13 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
+  min-width: 320px;
 }
 
 #root {
@@ -57,72 +58,34 @@ body {
 
 h1,
 h2 {
-  margin: 0 0 0.75rem;
-  font-weight: 600;
-  color: var(--text-h);
+  margin: 0;
+  color: var(--text-strong);
+  letter-spacing: -0.03em;
 }
 
 h1 {
-  font-size: 1.5rem;
+  font-size: clamp(1.75rem, 2vw + 1rem, 2.6rem);
+  line-height: 1.05;
 }
 
 h2 {
-  font-size: 1.125rem;
+  font-size: 1.2rem;
+  line-height: 1.15;
+}
+
+p {
+  margin: 0;
 }
 
 a {
-  color: var(--accent);
+  color: inherit;
   text-decoration: none;
 }
 
-a:hover {
-  text-decoration: underline;
-}
-
-.donaton-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem 1rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.donaton-nav__brand {
-  font-weight: 700;
-  color: var(--text-h);
-  margin-right: auto;
-  text-decoration: none;
-}
-
-.donaton-nav__brand:hover {
-  text-decoration: underline;
-}
-
-.donaton-nav a.active {
-  font-weight: 600;
-  text-decoration: underline;
-}
-
-.donaton-main {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 1.25rem 1rem 2rem;
-  width: 100%;
-  flex: 1;
-}
-
-.donaton-main--auth {
-  max-width: none;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(1.5rem, 4vw, 3rem) 1.25rem;
-  min-height: 0;
+button,
+input,
+select {
+  font: inherit;
 }
 
 .donaton-layout {
@@ -133,303 +96,741 @@ a:hover {
 
 .donaton-layout--auth {
   background:
-    radial-gradient(
-      ellipse 100% 80% at 50% -30%,
-      var(--accent-soft),
-      transparent 55%
-    ),
-    var(--bg);
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8fbfc 0%, #eef3f8 100%);
 }
 
-.donaton-layout--auth .donaton-nav {
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  backdrop-filter: blur(10px);
+.donaton-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 1rem 1.2rem;
+  backdrop-filter: blur(14px);
+  background: rgba(237, 242, 247, 0.74);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.donaton-nav__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  gap: 1rem 2rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.donaton-nav__brand-block {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.donaton-nav__brand {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-strong);
+  letter-spacing: -0.04em;
+}
+
+.donaton-nav__subtitle {
+  font-size: 0.88rem;
+  color: var(--text-soft);
+}
+
+.donaton-nav__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.25rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.donaton-nav__links--public a {
+  padding: 0.7rem 1rem;
+}
+
+.donaton-nav__group {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-sm);
+}
+
+.donaton-nav__group-label {
+  padding: 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.donaton-nav a {
+  padding: 0.68rem 0.95rem;
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-weight: 600;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.donaton-nav a:hover {
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--text-strong);
+}
+
+.donaton-nav a.active {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+  color: #fff;
+  box-shadow: 0 10px 20px -16px rgba(15, 118, 110, 0.75);
+}
+
+.donaton-nav__logout {
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--text-strong);
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.donaton-nav__logout:hover {
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.donaton-main {
+  width: min(1280px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.6rem 0 2.4rem;
+  flex: 1;
+}
+
+.donaton-main--auth {
+  width: min(1200px, calc(100% - 2rem));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.2rem 0 3rem;
+}
+
+.donaton-auth-shell {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 460px);
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.donaton-auth-screen--panel,
+.donaton-card {
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-md);
+}
+
+.donaton-auth-screen--panel {
+  display: grid;
+  gap: 1.5rem;
+  padding: clamp(1.8rem, 3vw, 2.8rem);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 45%),
+    rgba(255, 255, 255, 0.92);
 }
 
 .donaton-auth-screen {
   width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
-  text-align: center;
 }
 
 .donaton-auth-header {
-  margin-bottom: 1.5rem;
+  display: grid;
+  gap: 0.7rem;
 }
 
-.donaton-auth-eyebrow {
-  margin: 0 0 0.35rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+.donaton-auth-eyebrow,
+.donaton-page-header__eyebrow,
+.donaton-section-eyebrow,
+.donaton-auth-card__eyebrow,
+.donaton-empty-state__eyebrow {
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent);
 }
 
-.donaton-auth-header h1 {
-  margin: 0 0 0.5rem;
-  font-size: clamp(1.5rem, 4vw, 1.85rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
+.donaton-auth-subtitle,
+.donaton-muted,
+.donaton-page-header__text,
+.donaton-metric-card__hint {
+  color: var(--text-soft);
 }
 
-.donaton-auth-subtitle {
-  margin: 0 auto;
-  max-width: 34ch;
-  line-height: 1.45;
+.donaton-auth-feature-list {
+  display: grid;
+  gap: 0.9rem;
 }
 
-.donaton-auth-switch {
-  margin: 1.35rem 0 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
+.donaton-auth-feature {
+  display: grid;
+  gap: 0.18rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-sm);
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid var(--border);
 }
 
-.donaton-auth-switch a {
-  font-weight: 600;
+.donaton-auth-feature strong {
+  color: var(--text-strong);
 }
 
-.donaton-card--auth {
-  margin: 0;
-  padding: clamp(1.35rem, 3vw, 1.85rem);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-auth);
-  border-color: color-mix(in srgb, var(--border) 85%, var(--accent) 8%);
-  text-align: left;
-}
-
-.donaton-main--auth .donaton-form {
-  max-width: none;
-  width: 100%;
-  gap: 1.1rem;
-}
-
-.donaton-main--auth .donaton-btn {
-  width: 100%;
-  margin-top: 0.15rem;
-  padding: 0.7rem 1rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
+.donaton-auth-feature span {
+  color: var(--text-soft);
 }
 
 .donaton-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  padding: 1.35rem;
   margin-bottom: 1rem;
+}
+
+.donaton-card--auth {
+  padding: 1.6rem;
+  border-radius: var(--radius-lg);
+  align-self: center;
+}
+
+.donaton-auth-card__header {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.donaton-auth-switch {
+  margin-top: 1rem;
+  font-size: 0.94rem;
+  color: var(--text-soft);
+}
+
+.donaton-auth-switch a {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.donaton-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem 2rem;
+  margin-bottom: 1.15rem;
+  padding: 1.4rem 1.45rem;
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(140deg, rgba(15, 118, 110, 0.06), transparent 38%),
+    rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  box-shadow: var(--shadow-sm);
+}
+
+.donaton-page-header__content {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.donaton-page-header__aside {
+  margin-top: 0.2rem;
+}
+
+.donaton-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+.donaton-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.donaton-metric-card {
+  display: grid;
+  gap: 0.32rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-sm);
+}
+
+.donaton-metric-card__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.donaton-metric-card__value {
+  font-size: 1.65rem;
+  color: var(--text-strong);
+  line-height: 1;
+}
+
+.donaton-metric-card--info {
+  border-color: rgba(37, 99, 235, 0.1);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.04), rgba(255, 255, 255, 0.88));
+}
+
+.donaton-metric-card--warning {
+  border-color: rgba(180, 83, 9, 0.12);
+  background: linear-gradient(180deg, rgba(180, 83, 9, 0.05), rgba(255, 255, 255, 0.88));
+}
+
+.donaton-card--subtle {
+  background: rgba(248, 250, 252, 0.82);
+}
+
+.donaton-card--highlight {
+  border-color: rgba(15, 118, 110, 0.24);
+  box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.08), var(--shadow-md);
+}
+
+.donaton-section-title {
+  margin-bottom: 0.95rem;
+}
+
+.donaton-toolbar-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, auto);
+  align-items: end;
+  gap: 0.9rem;
+}
+
+.donaton-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, auto);
+  align-items: end;
+  gap: 0.85rem;
+}
+
+.donaton-sort-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.donaton-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.donaton-action-bar--compact,
+.donaton-toolbar-panel .donaton-action-bar,
+.donaton-toolbar .donaton-action-bar {
+  margin-top: 0;
 }
 
 .donaton-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-width: 420px;
+  max-width: 460px;
+}
+
+.donaton-form--wide {
+  max-width: 100%;
 }
 
 .donaton-field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  text-align: left;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.donaton-field--inline {
+  min-width: 180px;
+}
+
+.donaton-field-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
 .donaton-field label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-h);
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-strong);
 }
 
 .donaton-field input,
 .donaton-field select {
-  min-height: 2.65rem;
-  padding: 0.55rem 0.75rem;
+  min-height: 2.9rem;
+  padding: 0.72rem 0.86rem;
+  border-radius: 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--text-h);
-  font: inherit;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text-strong);
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .donaton-field input:hover,
 .donaton-field select:hover {
-  border-color: color-mix(in srgb, var(--border) 55%, var(--text-h) 45%);
+  border-color: rgba(15, 118, 110, 0.24);
 }
 
 .donaton-field input:focus,
 .donaton-field select:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  border-color: rgba(15, 118, 110, 0.55);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .donaton-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.55rem 1rem;
+  gap: 0.45rem;
+  min-height: 2.9rem;
+  padding: 0.72rem 1.08rem;
   border: none;
-  border-radius: 6px;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  background: var(--accent);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
   color: #fff;
-  transition: background 0.15s ease;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    filter 0.16s ease;
+  box-shadow: 0 12px 24px -18px rgba(15, 118, 110, 0.8);
 }
 
 .donaton-btn:hover:not(:disabled) {
-  background: var(--accent-hover);
+  transform: translateY(-1px);
+  filter: brightness(1.02);
 }
 
 .donaton-btn:disabled {
-  opacity: 0.65;
+  opacity: 0.64;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-.donaton-alert {
-  padding: 0.65rem 0.85rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  text-align: left;
+.donaton-btn--secondary {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-strong);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: none;
 }
 
-.donaton-alert--error {
-  background: var(--error-bg);
-  color: var(--error);
-  border: 1px solid color-mix(in srgb, var(--error) 35%, transparent);
+.donaton-btn--secondary:hover:not(:disabled) {
+  background: #fff;
+}
+
+.donaton-btn--danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 12px 24px -18px rgba(185, 28, 28, 0.7);
+}
+
+.donaton-btn--small {
+  min-height: 2.2rem;
+  padding: 0.5rem 0.82rem;
+  font-size: 0.82rem;
+}
+
+.donaton-form-actions,
+.donaton-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
 }
 
 .donaton-table-wrap {
   overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .donaton-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.93);
 }
 
 .donaton-table th,
 .donaton-table td {
-  border: 1px solid var(--border);
-  padding: 0.5rem 0.65rem;
+  padding: 0.9rem 0.95rem;
   text-align: left;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .donaton-table th {
-  background: color-mix(in srgb, var(--surface) 85%, var(--border));
-  color: var(--text-h);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  background: rgba(248, 250, 252, 0.92);
 }
 
-.donaton-muted {
-  font-size: 0.875rem;
-  color: var(--text);
+.donaton-table tbody tr {
+  transition: background 0.16s ease;
 }
 
-.donaton-nav__logout {
-  margin-left: auto;
-  padding: 0.4rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text-h);
-  font: inherit;
-  font-size: 0.875rem;
+.donaton-table tbody tr[tabindex] {
   cursor: pointer;
 }
 
-.donaton-nav__logout:hover {
-  background: var(--bg);
+.donaton-table tbody tr:hover {
+  background: rgba(15, 118, 110, 0.04);
 }
 
-.donaton-form--wide {
-  max-width: 520px;
-}
-
-.donaton-form-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-top: 0.25rem;
-}
-
-.donaton-btn--secondary {
-  background: var(--surface);
-  color: var(--text-h);
-  border: 1px solid var(--border);
-}
-
-.donaton-btn--secondary:hover:not(:disabled) {
-  background: var(--bg);
-}
-
-.donaton-btn--danger {
-  background: #dc2626;
-}
-
-.donaton-btn--danger:hover:not(:disabled) {
-  background: #b91c1c;
-}
-
-.donaton-btn--small {
-  padding: 0.35rem 0.65rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.donaton-table-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+.donaton-table tbody tr[tabindex]:focus-visible {
+  outline: 2px solid rgba(15, 118, 110, 0.4);
+  outline-offset: -2px;
 }
 
 .donaton-row--active {
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  background: rgba(15, 118, 110, 0.08);
 }
 
 .donaton-badge {
-  display: inline-block;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
-  color: var(--text-h);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.62rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  border: 1px solid transparent;
 }
 
-.donaton-banner {
+.donaton-badge--neutral {
+  background: rgba(148, 163, 184, 0.14);
+  color: #475569;
+}
+
+.donaton-badge--info {
+  background: var(--info-soft);
+  color: var(--info);
+  border-color: rgba(37, 99, 235, 0.12);
+}
+
+.donaton-badge--success {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: rgba(21, 128, 61, 0.12);
+}
+
+.donaton-badge--warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border-color: rgba(180, 83, 9, 0.12);
+}
+
+.donaton-badge--danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: rgba(185, 28, 28, 0.12);
+}
+
+.donaton-inline-message {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 0.92rem 1rem;
+  border-radius: 16px;
+  border: 1px solid transparent;
+}
+
+.donaton-inline-message--info {
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  border-color: rgba(37, 99, 235, 0.1);
+}
+
+.donaton-inline-message--success {
+  background: rgba(21, 128, 61, 0.08);
+  color: var(--success);
+  border-color: rgba(21, 128, 61, 0.1);
+}
+
+.donaton-inline-message--error {
+  background: rgba(185, 28, 28, 0.08);
+  color: var(--danger);
+  border-color: rgba(185, 28, 28, 0.1);
+}
+
+.donaton-state {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: start;
+}
+
+.donaton-empty-state {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.2rem 0.2rem;
+}
+
+.donaton-empty-state > div {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.donaton-loading-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.donaton-loading-state__pulse {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.25);
+  animation: donaton-pulse 1.4s infinite;
+}
+
+.donaton-detail-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.donaton-detail-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.donaton-info-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.3rem;
   margin: 0;
-  padding: 0.55rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  text-align: left;
 }
 
-.donaton-banner--ok {
-  background: color-mix(in srgb, #16a34a 12%, var(--surface));
-  color: #15803d;
-  border: 1px solid color-mix(in srgb, #16a34a 35%, transparent);
+.donaton-info-row {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(15, 23, 42, 0.05);
 }
 
-.donaton-card--highlight {
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-  box-shadow: 0 0 0 1px var(--accent-soft);
+.donaton-info-row dt {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.donaton-section-title {
-  margin: 0 0 1rem;
-  font-size: 1.125rem;
-  color: var(--text-h);
+.donaton-info-row dd {
+  margin: 0;
+  color: var(--text-strong);
+  font-weight: 600;
 }
 
-@media (prefers-color-scheme: dark) {
-  .donaton-banner--ok {
-    color: #86efac;
+.donaton-link-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+}
+
+@keyframes donaton-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.25);
+  }
+
+  70% {
+    box-shadow: 0 0 0 12px rgba(15, 118, 110, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(15, 118, 110, 0);
+  }
+}
+
+@media (max-width: 980px) {
+  .donaton-auth-shell,
+  .donaton-nav__inner {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .donaton-nav__links {
+    justify-content: flex-start;
+  }
+
+  .donaton-toolbar-panel,
+  .donaton-toolbar,
+  .donaton-info-list,
+  .donaton-field-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .donaton-main {
+    width: min(100%, calc(100% - 1rem));
+    padding-top: 1rem;
+  }
+
+  .donaton-page-header,
+  .donaton-detail-card__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .donaton-nav {
+    padding-inline: 0.75rem;
+  }
+
+  .donaton-nav__group {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 20px;
+  }
+
+  .donaton-nav__links {
+    width: 100%;
+  }
+
+  .donaton-sort-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .donaton-card,
+  .donaton-page-header {
+    padding: 1rem;
   }
 }

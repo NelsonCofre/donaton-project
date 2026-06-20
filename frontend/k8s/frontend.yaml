@@ -1,0 +1,66 @@
+# Frontend React (Nginx). La imagen debe construirse con:
+#   --build-arg VITE_API_BASE_URL=http://localhost:30090
+#   --build-arg VITE_NECESSITY_API_BASE_URL=http://localhost:30090
+#   --build-arg VITE_LOGISTICS_API_BASE_URL=http://localhost:30090
+# Expuesto al navegador vía NodePort 30517 (equivalente al 5173 de Compose).
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend
+        app.kubernetes.io/part-of: donaton
+        app.kubernetes.io/component: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: donaton/frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: donaton
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: donaton
+    app.kubernetes.io/component: frontend
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30517
+      name: http
+  selector:
+    app.kubernetes.io/name: frontend
