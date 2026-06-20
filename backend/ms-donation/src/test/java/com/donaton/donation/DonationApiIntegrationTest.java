@@ -75,4 +75,39 @@ class DonationApiIntegrationTest {
 
 		mockMvc.perform(get("/api/v1/donations/" + id)).andExpect(status().isNotFound());
 	}
+
+	@Test
+	void updateMissingDonationReturns404() throws Exception {
+		String body = objectMapper.writeValueAsString(Map.of(
+				"resourceName", "Agua embotellada",
+				"quantity", 10,
+				"origin", "Empresa XYZ",
+				"donationDate", LocalDate.of(2026, 5, 10).toString(),
+				"warehouseName", "Centro Norte"));
+
+		mockMvc.perform(put("/api/v1/donations/99999")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(body))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void deleteMissingDonationReturns404() throws Exception {
+		mockMvc.perform(delete("/api/v1/donations/99999")).andExpect(status().isNotFound());
+	}
+
+	@Test
+	void createWithInvalidBodyReturns400() throws Exception {
+		String body = objectMapper.writeValueAsString(Map.of(
+				"resourceName", "",
+				"quantity", 0,
+				"origin", "",
+				"donationDate", LocalDate.of(2026, 5, 10).toString(),
+				"warehouseName", ""));
+
+		mockMvc.perform(post("/api/v1/donations")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(body))
+				.andExpect(status().isBadRequest());
+	}
 }

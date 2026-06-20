@@ -1,6 +1,10 @@
 # 📦 Donaton - Arquitectura de Microservicios
 
-> **¿Cómo ejecutarlo?** → **[docs/EJECUTAR.md](docs/EJECUTAR.md)** (pasos concretos con Kubernetes)
+> **¿Cómo ejecutarlo?** → **[docs/EJECUTAR.md](docs/EJECUTAR.md)** (Kubernetes paso a paso)
+>
+> **Referencia K8s** → **[docs/KUBERNETES.md](docs/KUBERNETES.md)** (arquitectura, puertos, scripts)
+>
+> **Tests y cobertura** → **[docs/TESTING.md](docs/TESTING.md)** (JUnit/JaCoCo + Vitest)
 
 ## 🧩 Descripción del Proyecto
 
