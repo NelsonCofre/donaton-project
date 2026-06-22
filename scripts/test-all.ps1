@@ -226,7 +226,13 @@ try {
         $vitestArgs += "--coverage"
     }
 
-    $frontendOutput = & npx @vitestArgs 2>&1
+    $prevErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $frontendOutput = & npx @vitestArgs 2>&1
+    } finally {
+        $ErrorActionPreference = $prevErrorAction
+    }
     foreach ($line in (Get-PlainTextLines $frontendOutput)) {
         Write-Host $line
     }
