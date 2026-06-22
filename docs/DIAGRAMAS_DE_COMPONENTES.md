@@ -1,119 +1,95 @@
 # Diagramas de Componentes
 
-Este documento contiene los diagramas de componentes en formato Mermaid para los contenedores trabajados recientemente en el proyecto:
+Este documento contiene versiones resumidas de los diagramas de componentes del proyecto en formato Mermaid.
+
+Servicios incluidos:
 
 - Frontend
+- BFF
 - Auth Service
 - Donation Service
+- Necessity Service
+- Logistics Service
 
-Hacer click derecho en la pestaña de este archivo y seleccionar "Open Preview" para visualizar los diagramas
-
+Haz click derecho en la pestaña de este archivo y selecciona "Open Preview" para visualizar los diagramas.
 
 ## Frontend
 
 ```mermaid
-flowchart TD
-    A["main.tsx"] --> B["App"]
-    A --> C["global.css"]
+flowchart LR
+    A[Usuario] --> B[Pages]
+    B --> C[Features]
+    C --> D[API Client]
+    D --> E[BFF / API Gateway]
 
-    B --> D["AuthProvider"]
-    D --> E["RouterProvider / createBrowserRouter"]
-
-    E --> F["MainLayout"]
-    E --> G["ProtectedRoute"]
-
-    E --> H["LoginPage"]
-    E --> I["RegisterPage"]
-    G --> J["DonationsPage"]
-
-    H --> K["LoginForm"]
-    I --> L["RegisterForm"]
-    J --> M["DonationsDashboard"]
-
-    M --> N["DonationList"]
-    M --> O["CreateDonationForm"]
-    O --> P["DonationForm"]
-    M --> P
-
-    K --> Q["userApi"]
-    L --> Q
-    M --> R["donationApi"]
-
-    Q --> S["shared/api/client"]
-    R --> S
-    S --> T["env.apiBaseUrl / BFF or backend API"]
-
-    D --> U["authStorage + auth events + useAuth"]
-    F --> U
-    G --> U
-    K --> U
-
-    R --> V["Donation entity types + mapper"]
-    Q --> W["User entity types"]
+    C --> F[Entities]
+    B --> G[Auth Guard]
 ```
 
 ## Auth Service
 
 ```mermaid
-flowchart TD
-    A["AuthController"] --> B["AuthService"]
+flowchart LR
+    A[Frontend / BFF] --> B[AuthController]
+    B --> C[AuthService]
+    C --> D[UserRepository]
+    D --> E[(Auth Database)]
 
-    B --> C["UserAccountRepository"]
-    B --> D["JwtService"]
-    B --> E["RefreshTokenService"]
-    B --> F["TokenBlacklistService"]
-    B --> G["AuthenticationManager"]
-    B --> H["PasswordEncoder"]
-
-    E --> I["RefreshTokenRepository"]
-    F --> J["BlacklistedTokenRepository"]
-
-    K["SecurityConfig"] --> L["JwtAuthenticationFilter"]
-    K --> M["CustomUserDetailsService"]
-    K --> G
-    K --> H
-
-    L --> D
-    L --> M
-    L --> F
-
-    M --> C
-
-    C --> N["UserAccount"]
-    I --> O["RefreshToken"]
-    J --> P["BlacklistedToken"]
-
-    Q["ApiExceptionHandler"] --> A
-    R["DTOs"] --> A
-    B --> R
-
-    C --> S["Auth Database"]
-    I --> S
-    J --> S
-
-    T["Flyway Migrations"] --> S
-    U["application.properties"] --> K
-    U --> D
+    C --> F[JWT Service]
+    B --> G[DTOs]
 ```
 
 ## Donation Service
 
 ```mermaid
-flowchart TD
-    A["DonationController"] --> B["DonationService"]
-    B --> C["DonationServiceImpl"]
+flowchart LR
+    A[Frontend / BFF] --> B[DonationController]
+    B --> C[DonationService]
+    C --> D[DonationRepository]
+    D --> E[(PostgreSQL)]
 
-    C --> D["DonationRepository"]
-    C --> E["Donation entity"]
-    C --> F["DonationRequestDto"]
-    C --> G["DonationResponseDto"]
+    C --> F[Donation Entity]
+    B --> G[DTOs]
+```
 
-    H["SecurityConfiguration"] --> A
-    I["GlobalExceptionHandler"] --> A
+## Necessity Service
 
-    D --> J["Donation Database"]
-    K["Flyway Migrations"] --> J
+```mermaid
+flowchart LR
+    A[Frontend / BFF] --> B[NecessityController]
+    B --> C[NecessityService]
+    C --> D[NecessityRepository]
+    D --> E[(PostgreSQL)]
 
-    L["application.properties"] --> H
-    L --> C
+    C --> F[Necessity Entity]
+    B --> G[DTOs]
+```
+
+## BFF
+
+```mermaid
+flowchart LR
+    A[Frontend] --> B[JwtAuthFilter]
+    B --> C[BffControllers]
+    C --> D[Mappers]
+    C --> E[Service Clients]
+    E --> F[Auth Service]
+    E --> G[Donation Service]
+    E --> H[Necessity Service]
+    E --> I[Logistics Service]
+
+    C --> J[DTOs]
+```
+
+## Logistics Service
+
+```mermaid
+flowchart LR
+    A[Frontend / BFF] --> B[LogisticsController]
+    B --> C[LogisticsService]
+    C --> D[Repositories]
+    D --> E[(PostgreSQL)]
+
+    C --> F[Logistics Entities]
+    B --> G[DTOs]
 ```
