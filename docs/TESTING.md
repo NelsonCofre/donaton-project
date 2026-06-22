@@ -7,7 +7,7 @@ Este proyecto usa dos flujos de pruebas:
 - **Backend Java:** JUnit 5, Spring Boot Test, Mockito/MockMvc, H2 y JaCoCo.
 - **Frontend React:** Vitest, React Testing Library, jsdom y coverage con V8.
 
-## Estado actual de la suite (~90 tests)
+## Estado actual de la suite (~86 tests)
 
 | Módulo | Tests | Archivos | Enfoque |
 |--------|-------|----------|---------|
@@ -15,9 +15,9 @@ Este proyecto usa dos flujos de pruebas:
 | `ms-donation` | 12 | 3 | Servicio unitario + CRUD + 404/400 |
 | `ms-necessity` | 11 | 3 | Servicio unitario + CRUD + 404/400 |
 | `ms-logistic` | 8 | 2 | CRUD centros/inventario/envíos + errores |
-| `bff` | 28 | 5 | Mappers, filtro JWT y contexto Spring |
+| `bff` | 24 | 5 | Mappers, filtro JWT y contexto Spring |
 | `frontend` | 19 | 9 | UI compartida, mappers y auth storage |
-| **Total** | **90** | **25** | |
+| **Total** | **86** | **25** | |
 
 ---
 
@@ -69,11 +69,30 @@ En Cursor/VS Code: `Ctrl+P` y busca por nombre, por ejemplo `DonationMapperTest`
 .\scripts\test-all.ps1
 ```
 
-Si todo pasa, verás `BUILD SUCCESSFUL` en cada backend y algo como `Test Files 9 passed` en frontend. Al final aparece:
+Si todo pasa, verás `BUILD SUCCESSFUL` en cada backend, un resumen por módulo y al final una tabla con el **gran total** (backend + frontend):
 
 ```text
-==> Flujo de tests finalizado.
+    [OK] 12 passed — ms-auth (12 tests)
+    ...
+==> Resumen de tests
+    Backend (5 módulos):
+      ms-auth         12 tests (12 passed)
+      ...
+      TOTAL backend   67 tests (67 passed)
+
+    Frontend:
+      vitest          19 tests (19 passed)
+
+    GRAN TOTAL:      86 tests (86 passed)
 ```
+
+Para listar **cada test por nombre** (backend y frontend):
+
+```powershell
+.\scripts\test-all.ps1 -VerboseTests
+```
+
+El total correcto es **86 tests** (67 backend + 19 frontend). El resumen final lo calcula leyendo los reportes de Gradle y el JSON de Vitest.
 
 **Un módulo backend:**
 
@@ -204,6 +223,30 @@ backend/ms-necessity/src/test/resources/application-test.properties
 backend/ms-logistic/src/test/resources/application-test.properties
 backend/bff/src/test/resources/application-test.properties
 ```
+
+---
+
+## Problemas frecuentes (Windows / OneDrive)
+
+### Vitest: `Timeout waiting for worker to respond` o fallo en `EmptyState.test.tsx`
+
+En Windows, sobre todo si el proyecto está en **OneDrive**, Vitest puede tardar mucho en arrancar workers (`forks`) y parecer que falla aunque los demás tests pasen.
+
+El proyecto ya está configurado para mitigarlo:
+
+- Pool **`threads`** (no `forks`) en `frontend/vite.config.ts` y en los scripts `npm test`.
+- **`maxWorkers: 1`** y **`fileParallelism: false`** (un archivo a la vez).
+- El **React Compiler** se desactiva durante tests (acelera el arranque).
+
+Si sigue fallando:
+
+1. Cierra otras apps pesadas y vuelve a ejecutar `npm test` solo en `frontend/`.
+2. Excluye `node_modules` de la sincronización de OneDrive, o mueve el repo fuera de OneDrive.
+3. Ejecuta de nuevo: `npm test` en `frontend/` — deberías ver **9 archivos / 19 tests**.
+
+### El script termina con error aunque el backend pasó
+
+`test-all.ps1` ahora propaga el código de salida: si frontend falla, el script termina con error (no solo muestra "Flujo finalizado").
 
 ---
 
