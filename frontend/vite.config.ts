@@ -6,18 +6,24 @@ import babel from '@rolldown/plugin-babel'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
+const isTest = process.env.VITEST === 'true'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    babel({ presets: [reactCompilerPreset()] })
+    // El React Compiler en tests ralentiza workers y provoca timeouts en Windows/OneDrive.
+    ...(isTest ? [] : [babel({ presets: [reactCompilerPreset()] })]),
   ],
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    pool: 'threads',
     fileParallelism: false,
     maxWorkers: 1,
-    testTimeout: 30000,
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
+    teardownTimeout: 30_000,
     coverage: {
       reporter: ['text', 'html', 'lcov'],
     },

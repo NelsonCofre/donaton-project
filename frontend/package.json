@@ -8,9 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run --maxWorkers=1",
-    "test:watch": "vitest --maxWorkers=1",
-    "coverage": "vitest run --coverage --maxWorkers=1"
+    "test": "vitest run --pool=threads --maxWorkers=1 --fileParallelism=false",
+    "test:watch": "vitest --pool=threads --maxWorkers=1 --fileParallelism=false",
+    "coverage": "vitest run --coverage --pool=threads --maxWorkers=1 --fileParallelism=false"
   },
   "dependencies": {
     "react": "^19.2.5",

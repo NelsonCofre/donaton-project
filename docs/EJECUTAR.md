@@ -309,11 +309,15 @@ curl.exe http://localhost:30090/api/v1/necessities `
 
 ## Paso 4 — Detener y eliminar el despliegue
 
+### Opción A — Eliminar todo (incluye datos de las BD)
+
+Usa esto solo si quieres **empezar de cero** (usuarios, donaciones, etc. se pierden).
+
 ```powershell
 .\scripts\undeploy-k8s.ps1
 ```
 
-Elimina todos los recursos del namespace `donaton` (pods, services, bases de datos, volúmenes).
+Elimina todos los recursos del namespace `donaton` (pods, services, bases de datos, **PVCs y volúmenes**).
 
 Equivalente manual:
 
@@ -321,6 +325,61 @@ Equivalente manual:
 kubectl delete -f k8s.yaml
 kubectl delete namespace donaton --ignore-not-found
 ```
+
+> **Atención:** `kubectl delete -f k8s.yaml` borra también el **Namespace**, y con él desaparecen los PVC (`data-postgres-auth-0`, etc.).
+
+---
+
+### Opción B — Detener el despliegue conservando los datos (recomendado)
+
+Si quieres bajar el stack pero que **al volver a desplegar sigan existiendo usuarios, donaciones y el resto de datos**, no uses `undeploy-k8s.ps1` ni `kubectl delete -f k8s.yaml`.
+
+Borra solo cargas de trabajo y servicios; **deja el namespace y los PVC**:
+
+```powershell
+kubectl delete deployment,statefulset,service -n donaton --all
+   kubectl delete secret -n donaton --all
+```
+
+Comprueba que los volúmenes persisten:
+
+```powershell
+kubectl get pvc -n donaton
+```
+
+Deberías ver algo como:
+
+```text
+data-postgres-auth-0
+data-postgres-donation-0
+data-postgres-logistics-0
+data-postgres-necessity-0
+```
+
+Para **volver a levantar** con los mismos datos:
+
+```powershell
+kubectl apply -f k8s.yaml
+kubectl get pods -n donaton -w
+```
+
+Al recrear los StatefulSet de PostgreSQL, Kubernetes reutiliza los PVC existentes.
+
+#### Atajo: bajar solo las apps (las BD siguen corriendo)
+
+Si solo quieres detener frontend, BFF, gateway y microservicios **sin tocar PostgreSQL**:
+
+```powershell
+kubectl delete deployment -n donaton --all
+```
+
+Luego vuelve a desplegar con `kubectl apply -f k8s.yaml`.
+
+| Comando | ¿Conserva datos? |
+|---------|------------------|
+| `undeploy-k8s.ps1` o `kubectl delete -f k8s.yaml` | No — borra namespace y PVCs |
+| `kubectl delete deployment,statefulset,service,secret -n donaton --all` | Sí — PVCs quedan en el cluster |
+| `kubectl delete deployment -n donaton --all` | Sí — solo para apps; las BD siguen activas |
 
 ---
 
