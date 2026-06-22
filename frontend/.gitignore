@@ -30,6 +30,7 @@ vite.config.*.timestamp-*
 
 # Tests / cobertura
 coverage
+vitest-results.json
 
 # Cachés de bundlers u otras herramientas
 .cache
