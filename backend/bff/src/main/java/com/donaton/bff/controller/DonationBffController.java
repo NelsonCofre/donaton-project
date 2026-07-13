@@ -15,10 +15,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.donaton.bff.client.DonationServiceClient;
 import com.donaton.bff.dto.api.FrontendDonationDtos.CreateDonacionRequest;
 import com.donaton.bff.dto.api.FrontendDonationDtos.DonacionResponse;
-import com.donaton.bff.mapper.DonationMapper;
+import com.donaton.bff.service.DonationBffService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -37,10 +36,10 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/donations")
 public class DonationBffController {
 
-	private final DonationServiceClient donationServiceClient;
+	private final DonationBffService donationBffService;
 
-	public DonationBffController(DonationServiceClient donationServiceClient) {
-		this.donationServiceClient = donationServiceClient;
+	public DonationBffController(DonationBffService donationBffService) {
+		this.donationBffService = donationBffService;
 	}
 
 	@Operation(
@@ -57,9 +56,7 @@ public class DonationBffController {
 	public List<DonacionResponse> list(
 		@Parameter(hidden = true) @RequestHeader(value = "Authorization", required = false) String authorization
 	) {
-		return donationServiceClient.list(authorization).stream()
-			.map(DonationMapper::toFrontend)
-			.toList();
+		return donationBffService.list(authorization);
 	}
 
 	@Operation(
@@ -78,7 +75,7 @@ public class DonationBffController {
 		@Parameter(description = "Identificador de la donación", example = "1") @PathVariable long id,
 		@Parameter(hidden = true) @RequestHeader(value = "Authorization", required = false) String authorization
 	) {
-		return DonationMapper.toFrontend(donationServiceClient.getById(id, authorization));
+		return donationBffService.getById(id, authorization);
 	}
 
 	@Operation(
@@ -97,11 +94,8 @@ public class DonationBffController {
 		@Valid @RequestBody CreateDonacionRequest request,
 		@Parameter(hidden = true) @RequestHeader(value = "Authorization", required = false) String authorization
 	) {
-		var created = donationServiceClient.create(
-			DonationMapper.toServiceRequest(request),
-			authorization
-		);
-		return ResponseEntity.status(HttpStatus.CREATED).body(DonationMapper.toFrontend(created));
+		return ResponseEntity.status(HttpStatus.CREATED)
+			.body(donationBffService.create(request, authorization));
 	}
 
 	@Operation(
@@ -122,12 +116,7 @@ public class DonationBffController {
 		@Valid @RequestBody CreateDonacionRequest request,
 		@Parameter(hidden = true) @RequestHeader(value = "Authorization", required = false) String authorization
 	) {
-		var updated = donationServiceClient.update(
-			id,
-			DonationMapper.toServiceRequest(request),
-			authorization
-		);
-		return DonationMapper.toFrontend(updated);
+		return donationBffService.update(id, request, authorization);
 	}
 
 	@Operation(
@@ -145,7 +134,7 @@ public class DonationBffController {
 		@Parameter(description = "Identificador de la donación", example = "1") @PathVariable long id,
 		@Parameter(hidden = true) @RequestHeader(value = "Authorization", required = false) String authorization
 	) {
-		donationServiceClient.delete(id, authorization);
+		donationBffService.delete(id, authorization);
 		return ResponseEntity.noContent().build();
 	}
 }

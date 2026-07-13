@@ -14,10 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.donaton.bff.client.NecessityServiceClient;
 import com.donaton.bff.dto.api.FrontendNecessityDtos.CreateNecesidadRequest;
 import com.donaton.bff.dto.api.FrontendNecessityDtos.NecesidadResponse;
-import com.donaton.bff.mapper.NecessityMapper;
+import com.donaton.bff.service.NecessityBffService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,28 +27,25 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/necessities")
 public class NecessityBffController {
 
-	private final NecessityServiceClient necessityServiceClient;
+	private final NecessityBffService necessityBffService;
 
-	public NecessityBffController(NecessityServiceClient necessityServiceClient) {
-		this.necessityServiceClient = necessityServiceClient;
+	public NecessityBffController(NecessityBffService necessityBffService) {
+		this.necessityBffService = necessityBffService;
 	}
 
 	@GetMapping
 	public List<NecesidadResponse> list() {
-		return necessityServiceClient.list().stream()
-			.map(NecessityMapper::toFrontend)
-			.toList();
+		return necessityBffService.list();
 	}
 
 	@GetMapping("/{id}")
 	public NecesidadResponse getById(@PathVariable long id) {
-		return NecessityMapper.toFrontend(necessityServiceClient.getById(id));
+		return necessityBffService.getById(id);
 	}
 
 	@PostMapping
 	public ResponseEntity<NecesidadResponse> create(@Valid @RequestBody CreateNecesidadRequest request) {
-		var created = necessityServiceClient.create(NecessityMapper.toServiceRequest(request));
-		return ResponseEntity.status(HttpStatus.CREATED).body(NecessityMapper.toFrontend(created));
+		return ResponseEntity.status(HttpStatus.CREATED).body(necessityBffService.create(request));
 	}
 
 	@PutMapping("/{id}")
@@ -57,13 +53,12 @@ public class NecessityBffController {
 		@PathVariable long id,
 		@Valid @RequestBody CreateNecesidadRequest request
 	) {
-		var updated = necessityServiceClient.update(id, NecessityMapper.toServiceRequest(request));
-		return NecessityMapper.toFrontend(updated);
+		return necessityBffService.update(id, request);
 	}
 
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> delete(@PathVariable long id) {
-		necessityServiceClient.delete(id);
+		necessityBffService.delete(id);
 		return ResponseEntity.noContent().build();
 	}
 }

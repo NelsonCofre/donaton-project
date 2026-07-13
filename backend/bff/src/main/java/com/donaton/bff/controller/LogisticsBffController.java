@@ -1,7 +1,6 @@
 package com.donaton.bff.controller;
 
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,15 +14,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.donaton.bff.client.LogisticsServiceClient;
 import com.donaton.bff.dto.api.FrontendLogisticsDtos.CollectionCenterResponse;
 import com.donaton.bff.dto.api.FrontendLogisticsDtos.CreateCollectionCenterRequest;
 import com.donaton.bff.dto.api.FrontendLogisticsDtos.CreateInventoryItemRequest;
 import com.donaton.bff.dto.api.FrontendLogisticsDtos.CreateShipmentRequest;
 import com.donaton.bff.dto.api.FrontendLogisticsDtos.InventoryItemResponse;
 import com.donaton.bff.dto.api.FrontendLogisticsDtos.ShipmentResponse;
-import com.donaton.bff.dto.logistics.LogisticsServiceDtos.CentroAcopioResponseDto;
-import com.donaton.bff.mapper.LogisticsMapper;
+import com.donaton.bff.service.LogisticsBffService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -34,30 +31,27 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/logistics")
 public class LogisticsBffController {
 
-	private final LogisticsServiceClient logisticsServiceClient;
+	private final LogisticsBffService logisticsBffService;
 
-	public LogisticsBffController(LogisticsServiceClient logisticsServiceClient) {
-		this.logisticsServiceClient = logisticsServiceClient;
+	public LogisticsBffController(LogisticsBffService logisticsBffService) {
+		this.logisticsBffService = logisticsBffService;
 	}
 
 	@GetMapping("/collection-centers")
-	public java.util.List<CollectionCenterResponse> listCenters() {
-		return logisticsServiceClient.listCenters().stream()
-			.map(LogisticsMapper::toFrontend)
-			.toList();
+	public List<CollectionCenterResponse> listCenters() {
+		return logisticsBffService.listCenters();
 	}
 
 	@GetMapping("/collection-centers/{id}")
 	public CollectionCenterResponse getCenterById(@PathVariable long id) {
-		return LogisticsMapper.toFrontend(logisticsServiceClient.getCenterById(id));
+		return logisticsBffService.getCenterById(id);
 	}
 
 	@PostMapping("/collection-centers")
 	public ResponseEntity<CollectionCenterResponse> createCenter(
 		@Valid @RequestBody CreateCollectionCenterRequest request
 	) {
-		var created = logisticsServiceClient.createCenter(LogisticsMapper.toServiceRequest(request));
-		return ResponseEntity.status(HttpStatus.CREATED).body(LogisticsMapper.toFrontend(created));
+		return ResponseEntity.status(HttpStatus.CREATED).body(logisticsBffService.createCenter(request));
 	}
 
 	@PutMapping("/collection-centers/{id}")
@@ -65,31 +59,25 @@ public class LogisticsBffController {
 		@PathVariable long id,
 		@Valid @RequestBody CreateCollectionCenterRequest request
 	) {
-		var updated = logisticsServiceClient.updateCenter(id, LogisticsMapper.toServiceRequest(request));
-		return LogisticsMapper.toFrontend(updated);
+		return logisticsBffService.updateCenter(id, request);
 	}
 
 	@DeleteMapping("/collection-centers/{id}")
 	public ResponseEntity<Void> deleteCenter(@PathVariable long id) {
-		logisticsServiceClient.deleteCenter(id);
+		logisticsBffService.deleteCenter(id);
 		return ResponseEntity.noContent().build();
 	}
 
 	@GetMapping("/inventories")
-	public java.util.List<InventoryItemResponse> listInventory() {
-		Map<Long, String> centerNames = centerNames();
-		return logisticsServiceClient.listInventory().stream()
-			.map(item -> LogisticsMapper.toFrontend(item, centerNames.get(item.centerId())))
-			.toList();
+	public List<InventoryItemResponse> listInventory() {
+		return logisticsBffService.listInventory();
 	}
 
 	@PostMapping("/inventories")
 	public ResponseEntity<InventoryItemResponse> createInventory(
 		@Valid @RequestBody CreateInventoryItemRequest request
 	) {
-		var created = logisticsServiceClient.createInventory(LogisticsMapper.toServiceRequest(request));
-		return ResponseEntity.status(HttpStatus.CREATED)
-			.body(LogisticsMapper.toFrontend(created, centerNames().get(created.centerId())));
+		return ResponseEntity.status(HttpStatus.CREATED).body(logisticsBffService.createInventory(request));
 	}
 
 	@PutMapping("/inventories/{id}")
@@ -97,31 +85,25 @@ public class LogisticsBffController {
 		@PathVariable long id,
 		@Valid @RequestBody CreateInventoryItemRequest request
 	) {
-		var updated = logisticsServiceClient.updateInventory(id, LogisticsMapper.toServiceRequest(request));
-		return LogisticsMapper.toFrontend(updated, centerNames().get(updated.centerId()));
+		return logisticsBffService.updateInventory(id, request);
 	}
 
 	@DeleteMapping("/inventories/{id}")
 	public ResponseEntity<Void> deleteInventory(@PathVariable long id) {
-		logisticsServiceClient.deleteInventory(id);
+		logisticsBffService.deleteInventory(id);
 		return ResponseEntity.noContent().build();
 	}
 
 	@GetMapping("/shipments")
-	public java.util.List<ShipmentResponse> listShipments() {
-		Map<Long, String> centerNames = centerNames();
-		return logisticsServiceClient.listShipments().stream()
-			.map(item -> LogisticsMapper.toFrontend(item, centerNames.get(item.centerId())))
-			.toList();
+	public List<ShipmentResponse> listShipments() {
+		return logisticsBffService.listShipments();
 	}
 
 	@PostMapping("/shipments")
 	public ResponseEntity<ShipmentResponse> createShipment(
 		@Valid @RequestBody CreateShipmentRequest request
 	) {
-		var created = logisticsServiceClient.createShipment(LogisticsMapper.toServiceRequest(request));
-		return ResponseEntity.status(HttpStatus.CREATED)
-			.body(LogisticsMapper.toFrontend(created, centerNames().get(created.centerId())));
+		return ResponseEntity.status(HttpStatus.CREATED).body(logisticsBffService.createShipment(request));
 	}
 
 	@PutMapping("/shipments/{id}")
@@ -129,22 +111,12 @@ public class LogisticsBffController {
 		@PathVariable long id,
 		@Valid @RequestBody CreateShipmentRequest request
 	) {
-		var updated = logisticsServiceClient.updateShipment(id, LogisticsMapper.toServiceRequest(request));
-		return LogisticsMapper.toFrontend(updated, centerNames().get(updated.centerId()));
+		return logisticsBffService.updateShipment(id, request);
 	}
 
 	@DeleteMapping("/shipments/{id}")
 	public ResponseEntity<Void> deleteShipment(@PathVariable long id) {
-		logisticsServiceClient.deleteShipment(id);
+		logisticsBffService.deleteShipment(id);
 		return ResponseEntity.noContent().build();
-	}
-
-	private Map<Long, String> centerNames() {
-		return logisticsServiceClient.listCenters().stream()
-			.collect(Collectors.toMap(
-				CentroAcopioResponseDto::id,
-				CentroAcopioResponseDto::name,
-				(left, right) -> left
-			));
 	}
 }
