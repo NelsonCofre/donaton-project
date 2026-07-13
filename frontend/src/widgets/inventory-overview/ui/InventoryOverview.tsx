@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
-  getLogisticsRepository,
   useCollectionCentersList,
   useInventoriesList,
-  type CreateInventoryItemRequest,
-  type InventoryItem,
+  sortInventoryByUpdatedDate,
 } from '@/entities/logistics'
+import { useInventoryManagement } from '@/features/inventory-manage'
 import { InventoryForm } from '@/features/inventory-form'
 import { InventoryList } from '@/features/inventory-list'
 import {
@@ -18,53 +17,14 @@ import {
 } from '@/shared/ui'
 
 export function InventoryOverview() {
-  const repository = getLogisticsRepository()
   const { centers } = useCollectionCentersList()
   const { items, loading, error, load } = useInventoriesList()
-  const [editing, setEditing] = useState<InventoryItem | null>(null)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [formError, setFormError] = useState<string | null>(null)
-  const [formSuccess, setFormSuccess] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
+  const management = useInventoryManagement(load)
 
   const sortedItems = useMemo(
-    () => [...items].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+    () => sortInventoryByUpdatedDate(items),
     [items],
   )
-
-  async function handleSubmit(values: CreateInventoryItemRequest) {
-    setFormError(null)
-    setFormSuccess(null)
-    setSaving(true)
-    try {
-      if (editing) {
-        await repository.updateInventory(editing.idInventario, values)
-        setFormSuccess('Inventario actualizado correctamente.')
-        setEditing(null)
-      } else {
-        await repository.createInventory(values)
-        setFormSuccess('Inventario creado correctamente.')
-      }
-      await load()
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'No se pudo guardar el inventario.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function handleDelete(id: number) {
-    const confirmed = window.confirm('¿Eliminar este item de inventario?')
-    if (!confirmed) return
-    setDeletingId(id)
-    try {
-      await repository.removeInventory(id)
-      if (editing?.idInventario === id) setEditing(null)
-      await load()
-    } finally {
-      setDeletingId(null)
-    }
-  }
 
   return (
     <>
@@ -83,9 +43,9 @@ export function InventoryOverview() {
         />
         <MetricCard
           label="Modo"
-          value={editing ? 'Edición' : 'Carga'}
+          value={management.editing ? 'Edición' : 'Carga'}
           hint="Estado actual del formulario"
-          tone={editing ? 'warning' : 'neutral'}
+          tone={management.editing ? 'warning' : 'neutral'}
         />
       </div>
 
@@ -101,36 +61,36 @@ export function InventoryOverview() {
         {!loading && !error && sortedItems.length > 0 ? (
           <InventoryList
             items={sortedItems}
-            editingId={editing?.idInventario ?? null}
-            deletingId={deletingId}
-            onEdit={setEditing}
-            onDelete={(id) => void handleDelete(id)}
+            editingId={management.editing?.idInventario ?? null}
+            deletingId={management.deletingId}
+            onEdit={management.setEditing}
+            onDelete={(id) => void management.remove(id)}
           />
         ) : null}
       </SectionCard>
 
       <SectionCard
         eyebrow="Mantenimiento"
-        title={editing ? 'Editar item' : 'Nuevo item'}
+        title={management.editing ? 'Editar item' : 'Nuevo item'}
         variant="subtle"
       >
         <InventoryForm
           centers={centers}
           initialValues={
-            editing
+            management.editing
               ? {
-                  idCentro: editing.idCentro,
-                  recurso: editing.recurso,
-                  cantidad: editing.cantidad,
+                  idCentro: management.editing.idCentro,
+                  recurso: management.editing.recurso,
+                  cantidad: management.editing.cantidad,
                 }
               : undefined
           }
-          error={formError}
-          success={formSuccess}
-          loading={saving}
-          submitLabel={editing ? 'Guardar cambios' : 'Crear item'}
-          onSubmit={(values) => void handleSubmit(values)}
-          onCancel={editing ? () => setEditing(null) : undefined}
+          error={management.error}
+          success={management.success}
+          loading={management.saving}
+          submitLabel={management.editing ? 'Guardar cambios' : 'Crear item'}
+          onSubmit={(values) => void management.save(values)}
+          onCancel={management.editing ? () => management.setEditing(null) : undefined}
         />
       </SectionCard>
     </>

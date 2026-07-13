@@ -1,6 +1,4 @@
-import type { CreateDonacionRequest, Donacion } from '@/entities/donation'
-import { donacionToFormValues } from '@/entities/donation/lib/mapDonacion'
-import { DonationForm } from '@/features/donation-form'
+import { DonationForm, donacionToFormValues, type CreateDonacionRequest, type Donacion } from '@/entities/donation'
 
 type EditDonationSectionProps = {
   donacion: Donacion

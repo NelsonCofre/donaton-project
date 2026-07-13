@@ -1,10 +1,8 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  getLogisticsRepository,
   useCollectionCentersList,
-  type CreateCollectionCenterRequest,
 } from '@/entities/logistics'
+import { useCreateCollectionCenter } from '@/features/collection-center-create'
 import { CollectionCenterForm } from '@/features/collection-center-form'
 import { CollectionCenterList } from '@/features/collection-center-list'
 import {
@@ -18,26 +16,8 @@ import {
 
 export function CollectionCentersOverview() {
   const navigate = useNavigate()
-  const repository = getLogisticsRepository()
   const { centers, loading, error, load } = useCollectionCentersList()
-  const [formError, setFormError] = useState<string | null>(null)
-  const [formSuccess, setFormSuccess] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-
-  async function handleCreate(values: CreateCollectionCenterRequest) {
-    setFormError(null)
-    setFormSuccess(null)
-    setSaving(true)
-    try {
-      await repository.createCenter(values)
-      setFormSuccess('Centro creado correctamente.')
-      await load()
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'No se pudo crear el centro.')
-    } finally {
-      setSaving(false)
-    }
-  }
+  const creation = useCreateCollectionCenter(load)
 
   return (
     <>
@@ -82,10 +62,10 @@ export function CollectionCentersOverview() {
         <CollectionCenterForm
           title="Registrar centro"
           submitLabel="Guardar centro"
-          error={formError}
-          success={formSuccess}
-          loading={saving}
-          onSubmit={(values) => void handleCreate(values)}
+          error={creation.error}
+          success={creation.success}
+          loading={creation.loading}
+          onSubmit={(values) => void creation.create(values)}
         />
       </SectionCard>
     </>

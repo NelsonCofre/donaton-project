@@ -1,5 +1,4 @@
-import type { Donacion } from '@/entities/donation'
-import { DonationListItem } from '@/features/donation-list-item'
+import { DonationListItem, type Donacion } from '@/entities/donation'
 
 type DonationListProps = {
   donaciones: Donacion[]

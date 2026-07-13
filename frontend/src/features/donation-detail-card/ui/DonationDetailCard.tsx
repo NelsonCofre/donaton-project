@@ -1,5 +1,4 @@
-import type { Donacion } from '@/entities/donation'
-import { DonationStatusChip } from '@/features/donation-status-chip'
+import { DonationStatusChip, type Donacion } from '@/entities/donation'
 import { InfoRow } from '@/shared/ui'
 
 type DonationDetailCardProps = {

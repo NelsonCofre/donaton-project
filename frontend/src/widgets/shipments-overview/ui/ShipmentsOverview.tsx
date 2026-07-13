@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
-  getLogisticsRepository,
   useCollectionCentersList,
   useShipmentsList,
-  type CreateShipmentRequest,
-  type Shipment,
+  sortShipmentsByDate,
 } from '@/entities/logistics'
+import { useShipmentManagement } from '@/features/shipment-manage'
 import { ShipmentForm } from '@/features/shipment-form'
 import { ShipmentList } from '@/features/shipment-list'
 import {
@@ -18,53 +17,14 @@ import {
 } from '@/shared/ui'
 
 export function ShipmentsOverview() {
-  const repository = getLogisticsRepository()
   const { centers } = useCollectionCentersList()
   const { items, loading, error, load } = useShipmentsList()
-  const [editing, setEditing] = useState<Shipment | null>(null)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [formError, setFormError] = useState<string | null>(null)
-  const [formSuccess, setFormSuccess] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
+  const management = useShipmentManagement(load)
 
   const sortedItems = useMemo(
-    () => [...items].sort((a, b) => b.fecha.localeCompare(a.fecha)),
+    () => sortShipmentsByDate(items),
     [items],
   )
-
-  async function handleSubmit(values: CreateShipmentRequest) {
-    setFormError(null)
-    setFormSuccess(null)
-    setSaving(true)
-    try {
-      if (editing) {
-        await repository.updateShipment(editing.idEnvio, values)
-        setFormSuccess('Envio actualizado correctamente.')
-        setEditing(null)
-      } else {
-        await repository.createShipment(values)
-        setFormSuccess('Envio creado correctamente.')
-      }
-      await load()
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'No se pudo guardar el envio.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function handleDelete(id: number) {
-    const confirmed = window.confirm('¿Eliminar este envio?')
-    if (!confirmed) return
-    setDeletingId(id)
-    try {
-      await repository.removeShipment(id)
-      if (editing?.idEnvio === id) setEditing(null)
-      await load()
-    } finally {
-      setDeletingId(null)
-    }
-  }
 
   return (
     <>
@@ -83,9 +43,9 @@ export function ShipmentsOverview() {
         />
         <MetricCard
           label="Modo"
-          value={editing ? 'Edición' : 'Planificación'}
+          value={management.editing ? 'Edición' : 'Planificación'}
           hint="Formulario operativo"
-          tone={editing ? 'warning' : 'neutral'}
+          tone={management.editing ? 'warning' : 'neutral'}
         />
       </div>
 
@@ -101,36 +61,36 @@ export function ShipmentsOverview() {
         {!loading && !error && sortedItems.length > 0 ? (
           <ShipmentList
             items={sortedItems}
-            editingId={editing?.idEnvio ?? null}
-            deletingId={deletingId}
-            onEdit={setEditing}
-            onDelete={(id) => void handleDelete(id)}
+            editingId={management.editing?.idEnvio ?? null}
+            deletingId={management.deletingId}
+            onEdit={management.setEditing}
+            onDelete={(id) => void management.remove(id)}
           />
         ) : null}
       </SectionCard>
 
       <SectionCard
         eyebrow="Programación"
-        title={editing ? 'Editar envio' : 'Nuevo envio'}
+        title={management.editing ? 'Editar envio' : 'Nuevo envio'}
         variant="subtle"
       >
         <ShipmentForm
           centers={centers}
           initialValues={
-            editing
+            management.editing
               ? {
-                  idCentro: editing.idCentro,
-                  fecha: editing.fecha,
-                  estado: editing.estado,
+                  idCentro: management.editing.idCentro,
+                  fecha: management.editing.fecha,
+                  estado: management.editing.estado,
                 }
               : undefined
           }
-          error={formError}
-          success={formSuccess}
-          loading={saving}
-          submitLabel={editing ? 'Guardar cambios' : 'Crear envio'}
-          onSubmit={(values) => void handleSubmit(values)}
-          onCancel={editing ? () => setEditing(null) : undefined}
+          error={management.error}
+          success={management.success}
+          loading={management.saving}
+          submitLabel={management.editing ? 'Guardar cambios' : 'Crear envio'}
+          onSubmit={(values) => void management.save(values)}
+          onCancel={management.editing ? () => management.setEditing(null) : undefined}
         />
       </SectionCard>
     </>

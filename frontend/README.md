@@ -40,10 +40,14 @@ src/
 │   ├── auth-login/
 │   ├── auth-register/
 │   ├── donation-list/
-│   └── donation-create/
+│   ├── donation-create/
+│   ├── inventory-manage/
+│   └── shipment-manage/
 ├── entities/
 │   ├── user/
-│   └── donation/
+│   ├── donation/
+│   ├── necessity/
+│   └── logistics/
 ├── shared/
 │   ├── api/client.ts
 │   ├── config/env.ts
@@ -53,6 +57,11 @@ src/
 ```
 
 Cada slice expone un **API público** vía `index.ts` en la raíz del slice (importar desde `@/pages/login`, `@/entities/user`, etc.).
+ESLint impide imports profundos a entidades y dependencias entre features hermanas.
+
+Los dominios con modo demo separan el contrato del repositorio y el adaptador HTTP. Si la URL
+del dominio está vacía se selecciona el repositorio mock; si está configurada, todas las llamadas
+usan el cliente HTTP compartido y su manejo uniforme de autenticación y errores.
 
 ## Modelo de datos (alineado al README raíz)
 
@@ -94,6 +103,12 @@ Tras login exitoso se guarda el JWT en `localStorage` (`shared/lib/authStorage.t
 | `/register` | Página solo de registro. |
 | `/iniciar-sesion`, `/registro` | Redirección a `/login` y `/register` (compatibilidad). |
 | `/donaciones` | Listado y alta de donaciones; **solo con sesión**. Sin token, redirección a `/login`. |
+| `/donaciones/nueva` | Alta de una donación. |
+| `/donaciones/:id` | Detalle, edición y eliminación de una donación. |
+| `/necesidades` | Listado de necesidades. |
+| `/logistica/centros` | Gestión de centros de acopio. |
+| `/logistica/inventario` | Gestión de inventario. |
+| `/logistica/envios` | Gestión de envíos. |
 
 Con sesión: enlace a donaciones y **Cerrar sesión** (borra el token y vuelve a `/login`). Sin sesión: **Iniciar sesión** y **Registro** en la barra; la marca **Donaton** enlaza a `/login`.
 

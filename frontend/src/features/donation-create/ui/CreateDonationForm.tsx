@@ -4,8 +4,8 @@ import {
   createDonacion,
   type CreateDonacionRequest,
   type Donacion,
+  DonationForm,
 } from '@/entities/donation'
-import { DonationForm } from '@/features/donation-form'
 
 type CreateDonationFormProps = {
   onCreated?: (donacion: Donacion) => void

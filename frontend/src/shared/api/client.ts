@@ -23,8 +23,12 @@ function getErrorMessage(status: number, body: unknown): string {
   return `Error ${status}`
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = `${env.apiBaseUrl}${path}`
+export async function request<T>(
+  path: string,
+  init?: RequestInit,
+  baseUrl = env.apiBaseUrl,
+): Promise<T> {
+  const url = `${baseUrl}${path}`
   const token = getStoredToken()
   const headers: HeadersInit = {
     Accept: 'application/json',

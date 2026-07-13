@@ -18,5 +18,30 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['@/entities/*/api/*', '@/entities/*/lib/*', '@/entities/*/model/*', '@/entities/*/ui/*'],
+          message: 'Consume la API pública del slice de entidad.',
+        }],
+      }],
+    },
+  },
+  {
+    files: ['src/features/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['@/features/*', '@/features/*/*'],
+          message: 'Una feature no puede depender de otra feature hermana.',
+        }],
+      }],
+    },
   },
 ])

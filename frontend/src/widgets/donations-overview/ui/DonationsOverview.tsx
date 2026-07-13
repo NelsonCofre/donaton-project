@@ -1,5 +1,12 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useDonationsList } from '@/entities/donation'
+import { useMemo } from 'react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  filterAndSortDonations,
+  parseDonationFilters,
+  serializeDonationFilters,
+  useDonationsList,
+  type DonationFilters,
+} from '@/entities/donation'
 import { DonationEmptyState } from '@/features/donation-empty-state'
 import { DonationFilterPanel } from '@/features/donation-filter'
 import { DonationList } from '@/features/donation-list'
@@ -25,17 +32,21 @@ export function DonationsOverview() {
   const navigate = useNavigate()
   const location = useLocation()
   const locationState = location.state as NavigationState
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filters = useMemo(() => parseDonationFilters(searchParams), [searchParams])
   const {
-    filteredDonaciones,
-    filters,
-    hasFilters,
+    donaciones,
     loading,
     error,
     load,
-    setQuery,
-    setEstado,
-    setSort,
   } = useDonationsList()
+  const filteredDonaciones = useMemo(
+    () => filterAndSortDonations(donaciones, filters),
+    [donaciones, filters],
+  )
+  const hasFilters = filters.query.trim() !== '' || filters.estado !== 'TODOS'
+  const updateFilters = (next: Partial<DonationFilters>) =>
+    setSearchParams(serializeDonationFilters({ ...filters, ...next }), { replace: true })
 
   return (
     <>
@@ -71,12 +82,12 @@ export function DonationsOverview() {
 
       <SectionCard eyebrow="Refinamiento" title="Filtros y acciones" variant="subtle">
         <Toolbar>
-          <DonationSearchForm value={filters.query} onChange={setQuery} />
-          <DonationFilterPanel value={filters.estado} onChange={setEstado} />
+          <DonationSearchForm value={filters.query} onChange={(query) => updateFilters({ query })} />
+          <DonationFilterPanel value={filters.estado} onChange={(estado) => updateFilters({ estado })} />
           <DonationSortSelect
             sortBy={filters.sortBy}
             sortDirection={filters.sortDirection}
-            onChange={setSort}
+            onChange={(sortBy, sortDirection) => updateFilters({ sortBy, sortDirection })}
           />
           <ActionBar>
             <DonationRefreshButton loading={loading} onRefresh={() => void load()} />

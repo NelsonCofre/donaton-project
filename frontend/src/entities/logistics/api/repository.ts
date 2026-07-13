@@ -1,29 +1,11 @@
 import { env } from '@/shared/config/env'
-import { getStoredToken } from '@/shared/lib/authStorage'
+import { createHttpLogisticsRepository } from './httpRepository'
+import type { LogisticsRepository } from './contract'
 import type {
   CollectionCenter,
-  CreateCollectionCenterRequest,
-  CreateInventoryItemRequest,
-  CreateShipmentRequest,
   InventoryItem,
   Shipment,
 } from '../model/types'
-
-export interface LogisticsRepository {
-  listCenters(): Promise<CollectionCenter[]>
-  getCenterById(id: number): Promise<CollectionCenter>
-  createCenter(payload: CreateCollectionCenterRequest): Promise<CollectionCenter>
-  updateCenter(id: number, payload: CreateCollectionCenterRequest): Promise<CollectionCenter>
-  removeCenter(id: number): Promise<void>
-  listInventory(): Promise<InventoryItem[]>
-  createInventory(payload: CreateInventoryItemRequest): Promise<InventoryItem>
-  updateInventory(id: number, payload: CreateInventoryItemRequest): Promise<InventoryItem>
-  removeInventory(id: number): Promise<void>
-  listShipments(): Promise<Shipment[]>
-  createShipment(payload: CreateShipmentRequest): Promise<Shipment>
-  updateShipment(id: number, payload: CreateShipmentRequest): Promise<Shipment>
-  removeShipment(id: number): Promise<void>
-}
 
 let centers: CollectionCenter[] = [
   {
@@ -179,96 +161,9 @@ const mockRepository: LogisticsRepository = {
   },
 }
 
-function createApiRepository(baseUrl: string): LogisticsRepository {
-  function errorMessage(status: number, body: unknown) {
-    if (body && typeof body === 'object' && 'message' in body) {
-      const message = (body as { message: unknown }).message
-      if (typeof message === 'string' && message.trim()) return message
-    }
-    return `Error ${status}`
-  }
-
-  async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const token = getStoredToken()
-    const response = await fetch(`${baseUrl}${path}`, {
-      ...init,
-      headers: {
-        Accept: 'application/json',
-        ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(init?.headers ?? {}),
-      },
-    })
-
-    const text = await response.text()
-    let body: unknown = null
-    if (text) {
-      try {
-        body = JSON.parse(text) as unknown
-      } catch {
-        body = text
-      }
-    }
-
-    if (!response.ok) {
-      throw new Error(errorMessage(response.status, body))
-    }
-
-    if (response.status === 204) {
-      return undefined as T
-    }
-
-    return body as T
-  }
-
-  return {
-    listCenters: () => request<CollectionCenter[]>('/api/v1/logistics/collection-centers'),
-    getCenterById: (id) =>
-      request<CollectionCenter>(`/api/v1/logistics/collection-centers/${id}`),
-    createCenter: (payload) =>
-      request<CollectionCenter>('/api/v1/logistics/collection-centers', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-    updateCenter: (id, payload) =>
-      request<CollectionCenter>(`/api/v1/logistics/collection-centers/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      }),
-    removeCenter: (id) =>
-      request<void>(`/api/v1/logistics/collection-centers/${id}`, { method: 'DELETE' }),
-    listInventory: () => request<InventoryItem[]>('/api/v1/logistics/inventories'),
-    createInventory: (payload) =>
-      request<InventoryItem>('/api/v1/logistics/inventories', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-    updateInventory: (id, payload) =>
-      request<InventoryItem>(`/api/v1/logistics/inventories/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      }),
-    removeInventory: (id) =>
-      request<void>(`/api/v1/logistics/inventories/${id}`, { method: 'DELETE' }),
-    listShipments: () => request<Shipment[]>('/api/v1/logistics/shipments'),
-    createShipment: (payload) =>
-      request<Shipment>('/api/v1/logistics/shipments', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-    updateShipment: (id, payload) =>
-      request<Shipment>(`/api/v1/logistics/shipments/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      }),
-    removeShipment: (id) =>
-      request<void>(`/api/v1/logistics/shipments/${id}`, { method: 'DELETE' }),
-  }
-}
-
 const repository =
   env.logisticsApiBaseUrl && env.logisticsApiBaseUrl.trim()
-    ? createApiRepository(env.logisticsApiBaseUrl)
+    ? createHttpLogisticsRepository(env.logisticsApiBaseUrl)
     : mockRepository
 
 export function getLogisticsRepository(): LogisticsRepository {
