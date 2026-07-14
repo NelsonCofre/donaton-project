@@ -176,10 +176,11 @@ metadata:
     app.kubernetes.io/part-of: donaton
     app.kubernetes.io/component: microservice
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - port: 8082
       targetPort: 8082
+      nodePort: 30082
       name: http
   selector:
     app.kubernetes.io/name: donation-service

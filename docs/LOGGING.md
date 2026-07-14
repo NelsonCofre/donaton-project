@@ -2,7 +2,7 @@
 
 Guía para **revisar los logs** del BFF y de los microservicios tras el despliegue.
 
-> Levantar el proyecto: [EJECUTAR.md](EJECUTAR.md) · Kubernetes: [KUBERNETES.md](KUBERNETES.md)
+> **Otras guías:** [correr la app (K8s)](EJECUTAR.md) · [Swagger](SWAGGER.md) · [tests](TESTING.md) · [índice](README.md)
 
 ---
 
