@@ -7,9 +7,11 @@ import com.donaton.necessity.model.Necessity;
 import com.donaton.necessity.repository.NecessityRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NecessityServiceImpl implements NecessityService {
@@ -20,7 +22,9 @@ public class NecessityServiceImpl implements NecessityService {
 	@Transactional
 	public NecessityResponseDto create(NecessityRequestDto request) {
 		Necessity entity = toEntity(request);
-		return toResponse(necessityRepository.save(entity));
+		NecessityResponseDto response = toResponse(necessityRepository.save(entity));
+		log.info("Necesidad creada id={} recurso={} cantidad={}", response.getId(), response.getResourceName(), response.getQuantity());
+		return response;
 	}
 
 	@Override
@@ -48,7 +52,9 @@ public class NecessityServiceImpl implements NecessityService {
 		existing.setLocation(request.getLocation());
 		existing.setReportedDate(request.getReportedDate());
 		existing.setReportedBy(request.getReportedBy());
-		return toResponse(necessityRepository.save(existing));
+		NecessityResponseDto response = toResponse(necessityRepository.save(existing));
+		log.info("Necesidad actualizada id={}", id);
+		return response;
 	}
 
 	@Override
@@ -58,6 +64,7 @@ public class NecessityServiceImpl implements NecessityService {
 			throw new ResourceNotFoundException("Necesidad no encontrada: " + id);
 		}
 		necessityRepository.deleteById(id);
+		log.info("Necesidad eliminada id={}", id);
 	}
 
 	private Necessity toEntity(NecessityRequestDto request) {
