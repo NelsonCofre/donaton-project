@@ -11,6 +11,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
 public class BffExceptionHandler {
 
@@ -20,6 +23,7 @@ public class BffExceptionHandler {
 		for (FieldError error : exception.getBindingResult().getFieldErrors()) {
 			details.put(error.getField(), error.getDefaultMessage());
 		}
+		log.warn("Validación fallida en BFF: {}", details);
 		return build(HttpStatus.BAD_REQUEST, "Validation failed", details);
 	}
 
@@ -29,16 +33,19 @@ public class BffExceptionHandler {
 		if (status == null) {
 			status = HttpStatus.BAD_GATEWAY;
 		}
+		log.warn("Error upstream [{}]: {}", status.value(), exception.getUpstreamMessage());
 		return build(status, exception.getUpstreamMessage(), null);
 	}
 
 	@ExceptionHandler(UnauthorizedException.class)
 	public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException exception) {
+		log.warn("No autorizado en BFF: {}", exception.getMessage());
 		return build(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
 	}
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<Map<String, Object>> handleGeneric(Exception exception) {
+		log.error("Error inesperado en BFF", exception);
 		return build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected server error", null);
 	}
 

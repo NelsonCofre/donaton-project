@@ -17,13 +17,13 @@ Haz click derecho en la pestaña de este archivo y selecciona "Open Preview" par
 
 ```mermaid
 flowchart LR
-    A[Usuario] --> B[Pages]
+    A[Usuario] --> G[Auth Guard]
+    G --> B[Pages]
     B --> C[Features]
     C --> D[API Client]
     D --> E[BFF / API Gateway]
 
     C --> F[Entities]
-    B --> G[Auth Guard]
 ```
 
 ## Auth Service

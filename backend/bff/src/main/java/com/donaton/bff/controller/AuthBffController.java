@@ -8,12 +8,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.donaton.bff.client.AuthServiceClient;
 import com.donaton.bff.dto.api.FrontendAuthDtos.AuthResponse;
 import com.donaton.bff.dto.api.FrontendAuthDtos.LoginRequest;
 import com.donaton.bff.dto.api.FrontendAuthDtos.RegisterRequest;
 import com.donaton.bff.dto.api.FrontendAuthDtos.UserResponse;
-import com.donaton.bff.mapper.AuthMapper;
+import com.donaton.bff.service.AuthBffService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,10 +28,10 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/auth")
 public class AuthBffController {
 
-	private final AuthServiceClient authServiceClient;
+	private final AuthBffService authBffService;
 
-	public AuthBffController(AuthServiceClient authServiceClient) {
-		this.authServiceClient = authServiceClient;
+	public AuthBffController(AuthBffService authBffService) {
+		this.authBffService = authBffService;
 	}
 
 	@Operation(
@@ -47,8 +46,7 @@ public class AuthBffController {
 	})
 	@PostMapping("/login")
 	public AuthResponse login(@Valid @RequestBody LoginRequest request) {
-		var auth = authServiceClient.login(AuthMapper.toAuthLogin(request));
-		return AuthMapper.toFrontendAuth(auth);
+		return authBffService.login(request);
 	}
 
 	@Operation(
@@ -63,7 +61,6 @@ public class AuthBffController {
 	})
 	@PostMapping("/register")
 	public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-		var auth = authServiceClient.register(AuthMapper.toAuthRegister(request));
-		return ResponseEntity.status(HttpStatus.CREATED).body(AuthMapper.toFrontendUser(auth.user()));
+		return ResponseEntity.status(HttpStatus.CREATED).body(authBffService.register(request));
 	}
 }

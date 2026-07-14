@@ -1,6 +1,8 @@
-# Flujo de tests y cobertura
+# Cómo ejecutar los tests
 
-> **Levantar el proyecto con Kubernetes:** [EJECUTAR.md](EJECUTAR.md) · Referencia técnica: [KUBERNETES.md](KUBERNETES.md)
+Guía dedicada a correr y revisar la suite de pruebas (backend + frontend) y la cobertura.
+
+> **Otras guías:** [correr la app (K8s)](EJECUTAR.md) · [Swagger](SWAGGER.md) · [logs](LOGGING.md) · [índice](README.md)
 
 Este proyecto usa dos flujos de pruebas:
 

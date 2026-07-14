@@ -2,7 +2,7 @@
 
 Documentación de arquitectura, archivos y operación del despliegue en **Docker Desktop Kubernetes**.
 
-> **Guía paso a paso para levantar el proyecto:** [EJECUTAR.md](EJECUTAR.md)
+> **Guía paso a paso para levantar el proyecto:** [EJECUTAR.md](EJECUTAR.md) · Índice: [README.md](README.md)
 
 ---
 
@@ -81,18 +81,23 @@ Namespace: donaton
 |----------|----------|-----|
 | Frontend | 30517 | http://localhost:30517 |
 | API Gateway | 30090 | http://localhost:30090 |
+| **BFF (Swagger)** | **30080** | http://localhost:30080/swagger-ui/index.html |
+| **Auth (Swagger)** | **30081** | http://localhost:30081/swagger-ui/index.html |
+| **Donations (Swagger)** | **30082** | http://localhost:30082/swagger-ui/index.html |
+| **Necessities (Swagger)** | **30083** | http://localhost:30083/swagger-ui/index.html |
+| **Logistics (Swagger)** | **30084** | http://localhost:30084/swagger-ui/index.html |
 
-### Puertos internos (solo dentro del cluster)
+Los NodePort `30080`–`30084` son para **Swagger / depuración directa** del backend. **El flujo normal de la app** sigue siendo: navegador → frontend `:30517` → gateway `:30090` → BFF (interno). Guía: [SWAGGER.md](SWAGGER.md).
 
-| Servicio | Puerto | Tipo Service |
-|----------|--------|--------------|
-| BFF | 8080 | ClusterIP |
-| auth-service | 8081 | ClusterIP |
-| donation-service | 8082 | ClusterIP |
-| necessity-service | 8083 | ClusterIP (también NodePort 30083*) |
-| logistics-service | 8084 | ClusterIP (también NodePort 30084*) |
+### Puertos internos (ClusterIP / targetPort)
 
-\* Los NodePort 30083/30084 existen para depuración directa del microservicio. **El flujo normal de la app no los usa**; el frontend entra por el gateway en `:30090`.
+| Servicio | Puerto contenedor |
+|----------|-------------------|
+| BFF | 8080 |
+| auth-service | 8081 |
+| donation-service | 8082 |
+| necessity-service | 8083 |
+| logistics-service | 8084 |
 
 ### Equivalencia Docker Compose ↔ Kubernetes
 
@@ -100,6 +105,11 @@ Namespace: donaton
 |----------------|------------------------|
 | 5173 (frontend) | 30517 |
 | 8090 (api-gateway) | 30090 |
+| 8080 (BFF / Swagger) | 30080 |
+| 8081 (auth / Swagger) | 30081 |
+| 8082 (donation / Swagger) | 30082 |
+| 8083 (necessity / Swagger) | 30083 |
+| 8084 (logistics / Swagger) | 30084 |
 
 ---
 
@@ -274,6 +284,8 @@ Ambos conviven; no es necesario eliminar Compose.
 
 | Documento | Contenido |
 |-----------|-----------|
-| [EJECUTAR.md](EJECUTAR.md) | Guía paso a paso para levantar el proyecto |
-| [TESTING.md](TESTING.md) | Cómo ejecutar y ver los tests |
-| [API.md](API.md) | Swagger y documentación de APIs |
+| [README.md](README.md) | Índice de guías |
+| [EJECUTAR.md](EJECUTAR.md) | Correr la app con Kubernetes |
+| [SWAGGER.md](SWAGGER.md) | Usar Swagger UI / OpenAPI |
+| [LOGGING.md](LOGGING.md) | Ver y probar logs |
+| [TESTING.md](TESTING.md) | Ejecutar tests |

@@ -147,6 +147,10 @@ spec:
                 secretKeyRef:
                   name: donaton-shared-secret
                   key: jwt-secret
+            - name: LOGGING_LEVEL_ROOT
+              value: INFO
+            - name: LOGGING_LEVEL_APP
+              value: INFO
           readinessProbe:
             tcpSocket:
               port: 8081
@@ -169,10 +173,11 @@ metadata:
     app.kubernetes.io/part-of: donaton
     app.kubernetes.io/component: microservice
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - port: 8081
       targetPort: 8081
+      nodePort: 30081
       name: http
   selector:
     app.kubernetes.io/name: auth-service

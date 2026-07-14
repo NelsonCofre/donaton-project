@@ -15,9 +15,11 @@ import com.donaton.logistics.repository.EnvioRepository;
 import com.donaton.logistics.repository.InventarioRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LogisticsServiceImpl implements LogisticsService {
@@ -30,7 +32,9 @@ public class LogisticsServiceImpl implements LogisticsService {
 	@Transactional
 	public CentroAcopioResponseDto createCentroAcopio(CentroAcopioRequestDto request) {
 		CentroAcopio entity = toCentroAcopioEntity(request);
-		return toCentroAcopioResponse(centroAcopioRepository.save(entity));
+		CentroAcopioResponseDto response = toCentroAcopioResponse(centroAcopioRepository.save(entity));
+		log.info("Centro de acopio creado id={} nombre={}", response.getId(), response.getName());
+		return response;
 	}
 
 	@Override
@@ -55,7 +59,9 @@ public class LogisticsServiceImpl implements LogisticsService {
 				.orElseThrow(() -> new ResourceNotFoundException("Centro de acopio no encontrado: " + id));
 		existing.setName(request.getName());
 		existing.setLocation(request.getLocation());
-		return toCentroAcopioResponse(centroAcopioRepository.save(existing));
+		CentroAcopioResponseDto response = toCentroAcopioResponse(centroAcopioRepository.save(existing));
+		log.info("Centro de acopio actualizado id={}", id);
+		return response;
 	}
 
 	@Override
@@ -65,6 +71,7 @@ public class LogisticsServiceImpl implements LogisticsService {
 			throw new ResourceNotFoundException("Centro de acopio no encontrado: " + id);
 		}
 		centroAcopioRepository.deleteById(id);
+		log.info("Centro de acopio eliminado id={}", id);
 	}
 
 	@Override
@@ -72,7 +79,9 @@ public class LogisticsServiceImpl implements LogisticsService {
 	public InventarioResponseDto createInventario(InventarioRequestDto request) {
 		ensureCentroAcopioExists(request.getCenterId());
 		Inventario entity = toInventarioEntity(request);
-		return toInventarioResponse(inventarioRepository.save(entity));
+		InventarioResponseDto response = toInventarioResponse(inventarioRepository.save(entity));
+		log.info("Inventario creado id={} centroId={} recurso={}", response.getId(), response.getCenterId(), response.getResource());
+		return response;
 	}
 
 	@Override
@@ -99,7 +108,9 @@ public class LogisticsServiceImpl implements LogisticsService {
 		existing.setCenterId(request.getCenterId());
 		existing.setResource(request.getResource());
 		existing.setQuantity(request.getQuantity());
-		return toInventarioResponse(inventarioRepository.save(existing));
+		InventarioResponseDto response = toInventarioResponse(inventarioRepository.save(existing));
+		log.info("Inventario actualizado id={}", id);
+		return response;
 	}
 
 	@Override
@@ -109,6 +120,7 @@ public class LogisticsServiceImpl implements LogisticsService {
 			throw new ResourceNotFoundException("Inventario no encontrado: " + id);
 		}
 		inventarioRepository.deleteById(id);
+		log.info("Inventario eliminado id={}", id);
 	}
 
 	@Override
@@ -116,7 +128,9 @@ public class LogisticsServiceImpl implements LogisticsService {
 	public EnvioResponseDto createEnvio(EnvioRequestDto request) {
 		ensureCentroAcopioExists(request.getCenterId());
 		Envio entity = toEnvioEntity(request);
-		return toEnvioResponse(envioRepository.save(entity));
+		EnvioResponseDto response = toEnvioResponse(envioRepository.save(entity));
+		log.info("Envío creado id={} centroId={} estado={}", response.getId(), response.getCenterId(), response.getStatus());
+		return response;
 	}
 
 	@Override
@@ -143,7 +157,9 @@ public class LogisticsServiceImpl implements LogisticsService {
 		existing.setDate(request.getDate());
 		existing.setStatus(request.getStatus());
 		existing.setCenterId(request.getCenterId());
-		return toEnvioResponse(envioRepository.save(existing));
+		EnvioResponseDto response = toEnvioResponse(envioRepository.save(existing));
+		log.info("Envío actualizado id={} estado={}", id, response.getStatus());
+		return response;
 	}
 
 	@Override
@@ -153,6 +169,7 @@ public class LogisticsServiceImpl implements LogisticsService {
 			throw new ResourceNotFoundException("Envío no encontrado: " + id);
 		}
 		envioRepository.deleteById(id);
+		log.info("Envío eliminado id={}", id);
 	}
 
 	private void ensureCentroAcopioExists(Long centerId) {

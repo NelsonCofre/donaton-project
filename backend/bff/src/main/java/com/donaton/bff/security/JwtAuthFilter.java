@@ -16,7 +16,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -46,11 +48,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 	) throws ServletException, IOException {
 		String authorization = request.getHeader("Authorization");
 		if (authorization == null || !authorization.startsWith("Bearer ")) {
+			log.warn("JWT rechazado en {}: header Authorization ausente o inválido", request.getRequestURI());
 			writeUnauthorized(response, "Missing or invalid Authorization header");
 			return;
 		}
 		String token = authorization.substring(7).trim();
 		if (token.isEmpty()) {
+			log.warn("JWT rechazado en {}: token vacío", request.getRequestURI());
 			writeUnauthorized(response, "Missing or invalid Authorization header");
 			return;
 		}
@@ -58,6 +62,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 			authServiceClient.validateToken(token);
 			filterChain.doFilter(request, response);
 		} catch (UnauthorizedException | UpstreamServiceException ex) {
+			log.warn("JWT inválido o expirado en {}: {}", request.getRequestURI(), ex.getMessage());
 			writeUnauthorized(response, "Invalid or expired token");
 		}
 	}

@@ -1,10 +1,15 @@
 # 📦 Donaton - Arquitectura de Microservicios
 
-> **¿Cómo ejecutarlo?** → **[docs/EJECUTAR.md](docs/EJECUTAR.md)** (Kubernetes paso a paso)
+> **Guías (una por tema):** **[docs/README.md](docs/README.md)**
 >
-> **Referencia K8s** → **[docs/KUBERNETES.md](docs/KUBERNETES.md)** (arquitectura, puertos, scripts)
+> | Tema | Documento |
+> |------|-----------|
+> | Correr con Kubernetes | [docs/EJECUTAR.md](docs/EJECUTAR.md) |
+> | Usar Swagger | [docs/SWAGGER.md](docs/SWAGGER.md) |
+> | Ver / probar logs | [docs/LOGGING.md](docs/LOGGING.md) |
+> | Ejecutar tests | [docs/TESTING.md](docs/TESTING.md) |
 >
-> **Tests y cobertura** → **[docs/TESTING.md](docs/TESTING.md)** (JUnit/JaCoCo + Vitest)
+> Referencia técnica del cluster: [docs/KUBERNETES.md](docs/KUBERNETES.md)
 
 ## 🧩 Descripción del Proyecto
 
@@ -81,7 +86,7 @@ El stack se despliega en el **cluster de Kubernetes**, no con `docker compose up
 
 Guía completa: **[docs/KUBERNETES.md](docs/KUBERNETES.md)** · Pasos concretos: **[docs/EJECUTAR.md](docs/EJECUTAR.md)**
 
-Documentación interactiva de APIs (Swagger): **[docs/API.md](docs/API.md)**
+Documentación interactiva de APIs (Swagger): **[docs/SWAGGER.md](docs/SWAGGER.md)**
 
 ```powershell
 # 1) Construir imágenes (docker build — no levanta la app)

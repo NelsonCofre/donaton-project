@@ -1,1 +1,0 @@
-export { InventoryForm } from './ui/InventoryForm'

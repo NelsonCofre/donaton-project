@@ -29,6 +29,9 @@ import com.donaton.auth.model.UserAccount;
 import com.donaton.auth.repository.UserAccountRepository;
 import com.donaton.auth.security.JwtService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class AuthService {
 
@@ -58,6 +61,7 @@ public class AuthService {
 	@Transactional
 	public AuthResponse register(RegisterRequest request) {
 		if (userAccountRepository.existsByEmailIgnoreCase(request.email())) {
+			log.warn("Registro rechazado: email ya existe [{}]", request.email());
 			throw new ConflictException("A user with this email already exists");
 		}
 
@@ -68,6 +72,7 @@ public class AuthService {
 		userAccount.setEnabled(true);
 
 		UserAccount savedUser = userAccountRepository.save(userAccount);
+		log.info("Usuario registrado id={} email={} role={}", savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
 		return buildAuthResponse(savedUser);
 	}
 
@@ -88,12 +93,14 @@ public class AuthService {
 				new UsernamePasswordAuthenticationToken(request.email(), request.password())
 			);
 		} catch (BadCredentialsException exception) {
+			log.warn("Login fallido para email={}", request.email());
 			throw new AuthenticationFailedException("Invalid credentials");
 		}
 
 		UserAccount userAccount = userAccountRepository.findByEmailIgnoreCase(request.email())
 			.orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+		log.info("Login exitoso email={} role={}", userAccount.getEmail(), userAccount.getRole());
 		return buildAuthResponse(userAccount);
 	}
 
@@ -141,6 +148,7 @@ public class AuthService {
 
 			tokenBlacklistService.blacklist(accessToken, jwtService.extractExpiration(accessToken));
 			refreshTokenService.revokeAllUserTokens(userAccount);
+			log.info("Logout exitoso email={}", email);
 		}
 
 		if (request != null && request.refreshToken() != null && !request.refreshToken().isBlank()) {
