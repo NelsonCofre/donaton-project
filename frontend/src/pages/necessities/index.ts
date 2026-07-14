@@ -1,1 +1,3 @@
-export { NecessitiesPage } from './ui/NecessitiesPage'
+export { NecessitiesListPage } from './NecessitiesListPage'
+export { NecessityCreatePage } from './NecessityCreatePage'
+export { NecessityDetailPage } from './NecessityDetailPage'
