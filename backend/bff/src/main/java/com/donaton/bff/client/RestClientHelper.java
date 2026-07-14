@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.RestClient;
@@ -13,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 final class RestClientHelper {
 
+	private static final Logger log = LoggerFactory.getLogger(RestClientHelper.class);
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	private RestClientHelper() {
@@ -20,7 +23,15 @@ final class RestClientHelper {
 
 	static RestClient.ResponseSpec withErrorHandling(RestClient.ResponseSpec spec) {
 		return spec.onStatus(HttpStatusCode::isError, (request, response) -> {
-			throw new UpstreamServiceException(response.getStatusCode(), readMessage(response));
+			String message = readMessage(response);
+			log.warn(
+				"Respuesta de error desde upstream {} {} -> {}: {}",
+				request.getMethod(),
+				request.getURI(),
+				response.getStatusCode().value(),
+				message
+			);
+			throw new UpstreamServiceException(response.getStatusCode(), message);
 		});
 	}
 

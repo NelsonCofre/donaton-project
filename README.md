@@ -5,6 +5,8 @@
 > **Referencia K8s** → **[docs/KUBERNETES.md](docs/KUBERNETES.md)** (arquitectura, puertos, scripts)
 >
 > **Tests y cobertura** → **[docs/TESTING.md](docs/TESTING.md)** (JUnit/JaCoCo + Vitest)
+>
+> **Ver logs** → **[docs/LOGGING.md](docs/LOGGING.md)** (BFF y microservicios en K8s / Compose)
 
 ## 🧩 Descripción del Proyecto
 

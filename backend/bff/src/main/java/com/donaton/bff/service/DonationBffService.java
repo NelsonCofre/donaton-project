@@ -9,6 +9,9 @@ import com.donaton.bff.dto.api.FrontendDonationDtos.CreateDonacionRequest;
 import com.donaton.bff.dto.api.FrontendDonationDtos.DonacionResponse;
 import com.donaton.bff.mapper.DonationMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class DonationBffService {
 
@@ -19,12 +22,15 @@ public class DonationBffService {
 	}
 
 	public List<DonacionResponse> list(String authorization) {
-		return donationServiceClient.list(authorization).stream()
+		List<DonacionResponse> donations = donationServiceClient.list(authorization).stream()
 			.map(DonationMapper::toFrontend)
 			.toList();
+		log.info("BFF listó {} donaciones", donations.size());
+		return donations;
 	}
 
 	public DonacionResponse getById(long id, String authorization) {
+		log.debug("BFF consulta donación id={}", id);
 		return DonationMapper.toFrontend(donationServiceClient.getById(id, authorization));
 	}
 
@@ -33,7 +39,9 @@ public class DonationBffService {
 			DonationMapper.toServiceRequest(request),
 			authorization
 		);
-		return DonationMapper.toFrontend(created);
+		DonacionResponse response = DonationMapper.toFrontend(created);
+		log.info("BFF creó donación id={}", response.idDonacion());
+		return response;
 	}
 
 	public DonacionResponse update(long id, CreateDonacionRequest request, String authorization) {
@@ -42,10 +50,12 @@ public class DonationBffService {
 			DonationMapper.toServiceRequest(request),
 			authorization
 		);
+		log.info("BFF actualizó donación id={}", id);
 		return DonationMapper.toFrontend(updated);
 	}
 
 	public void delete(long id, String authorization) {
 		donationServiceClient.delete(id, authorization);
+		log.info("BFF eliminó donación id={}", id);
 	}
 }

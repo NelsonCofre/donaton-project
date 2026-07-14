@@ -34,6 +34,8 @@ services:
       APP_SERVICES_NECESSITY_BASE_URL: http://necessity-service:8083
       APP_SERVICES_LOGISTICS_BASE_URL: http://logistics-service:8084
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
+      LOGGING_LEVEL_APP: ${LOGGING_LEVEL_APP:-INFO}
     depends_on:
       auth-service:
         condition: service_started
@@ -72,6 +74,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: "Informatica.25"
       JWT_SECRET: ${AUTH_SERVICE_JWT_SECRET:-default-local-auth-secret-minimum-32-characters-long!!}
       APP_CORS_ALLOWED_ORIGINS: ${AUTH_SERVICE_CORS_ORIGIN:-http://localhost:5173}
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
+      LOGGING_LEVEL_APP: ${LOGGING_LEVEL_APP:-INFO}
     depends_on:
       postgres-auth:
         condition: service_healthy
@@ -111,6 +115,7 @@ services:
       SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
       SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
       LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
+      LOGGING_LEVEL_APP: ${LOGGING_LEVEL_APP:-INFO}
     depends_on:
       postgres-donation:
         condition: service_healthy
@@ -150,6 +155,7 @@ services:
       SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
       SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
       LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
+      LOGGING_LEVEL_APP: ${LOGGING_LEVEL_APP:-INFO}
     depends_on:
       postgres-logistics:
         condition: service_healthy
@@ -189,6 +195,7 @@ services:
       SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
       SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS:-classpath:db/migration}
       LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT:-INFO}
+      LOGGING_LEVEL_APP: ${LOGGING_LEVEL_APP:-INFO}
     depends_on:
       postgres-necessity:
         condition: service_healthy

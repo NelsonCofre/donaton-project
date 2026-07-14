@@ -7,9 +7,11 @@ import com.donaton.donation.model.Donation;
 import com.donaton.donation.repository.DonationRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DonationServiceImpl implements DonationService {
@@ -20,7 +22,9 @@ public class DonationServiceImpl implements DonationService {
 	@Transactional
 	public DonationResponseDto create(DonationRequestDto request) {
 		Donation entity = toEntity(request);
-		return toResponse(donationRepository.save(entity));
+		DonationResponseDto response = toResponse(donationRepository.save(entity));
+		log.info("Donación creada id={} recurso={} cantidad={}", response.getId(), response.getResourceName(), response.getQuantity());
+		return response;
 	}
 
 	@Override
@@ -46,7 +50,9 @@ public class DonationServiceImpl implements DonationService {
 		existing.setOrigin(request.getOrigin());
 		existing.setDonationDate(request.getDonationDate());
 		existing.setWarehouseName(request.getWarehouseName());
-		return toResponse(donationRepository.save(existing));
+		DonationResponseDto response = toResponse(donationRepository.save(existing));
+		log.info("Donación actualizada id={}", id);
+		return response;
 	}
 
 	@Override
@@ -56,6 +62,7 @@ public class DonationServiceImpl implements DonationService {
 			throw new ResourceNotFoundException("Donación no encontrada: " + id);
 		}
 		donationRepository.deleteById(id);
+		log.info("Donación eliminada id={}", id);
 	}
 
 	private Donation toEntity(DonationRequestDto request) {

@@ -150,6 +150,10 @@ spec:
               value: validate
             - name: SPRING_FLYWAY_ENABLED
               value: "true"
+            - name: LOGGING_LEVEL_ROOT
+              value: INFO
+            - name: LOGGING_LEVEL_APP
+              value: INFO
           readinessProbe:
             tcpSocket:
               port: 8084
