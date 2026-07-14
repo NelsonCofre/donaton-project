@@ -173,10 +173,11 @@ metadata:
     app.kubernetes.io/part-of: donaton
     app.kubernetes.io/component: microservice
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - port: 8081
       targetPort: 8081
+      nodePort: 30081
       name: http
   selector:
     app.kubernetes.io/name: auth-service

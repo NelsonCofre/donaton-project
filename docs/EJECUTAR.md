@@ -2,12 +2,12 @@
 
 Guía paso a paso para **levantar, probar y detener** el proyecto en **Docker Desktop + Kubernetes**.
 
-> Documentación técnica ampliada: [KUBERNETES.md](KUBERNETES.md)  
-> Tests del proyecto: [TESTING.md](TESTING.md)
+> **Otras guías:** [Swagger](SWAGGER.md) · [logs](LOGGING.md) · [tests](TESTING.md) · [índice](README.md)  
+> Referencia técnica del cluster: [KUBERNETES.md](KUBERNETES.md)
 
 ---
 
-## Inicio rápido (3 comandos)
+## Inicio rápido
 
 Desde la **raíz del repositorio** (`donaton-project/`):
 
@@ -20,12 +20,19 @@ Desde la **raíz del repositorio** (`donaton-project/`):
 
 # 3. Abrir en el navegador
 start http://localhost:30517
+
+# 4. Cuando quieras borrar / cancelar el despliegue (borra TODO, también datos de BD)
+.\scripts\undeploy-k8s.ps1
 ```
 
 | Servicio | URL |
 |----------|-----|
 | **Frontend** | http://localhost:30517 |
 | **API Gateway (KrakenD)** | http://localhost:30090 |
+
+> Detalle de cómo borrar (con o sin conservar datos): [Borrar o cancelar el despliegue](#borrar-o-cancelar-el-despliegue) y [Paso 4](#paso-4--detener-y-eliminar-el-despliegue).
+
+> **Swagger, logs y tests** están en guías aparte: [SWAGGER.md](SWAGGER.md) · [LOGGING.md](LOGGING.md) · [TESTING.md](TESTING.md)
 
 > **¿Acabas de abrir Docker Desktop?** No hace falta rebuild ni redeploy. Ve directo a [Verificar pods](#verificar-pods-cada-vez-que-abres-docker-desktop), espera a que estén `Running` y luego abre el frontend.
 
@@ -94,6 +101,7 @@ Kubernetes **no compila** tu código. El flujo es:
 ```text
 build-k8s-images.ps1  →  docker build (crea imágenes donaton/* en tu PC)
 deploy-k8s.ps1        →  kubectl apply (crea pods, services, BD en K8s)
+undeploy-k8s.ps1      →  kubectl delete (borra el namespace donaton y TODO, incluidos datos)
 ```
 
 ```text
@@ -247,6 +255,28 @@ kubectl logs deployment/bff-service -n donaton --tail=30
 kubectl logs deployment/api-gateway -n donaton --tail=30
 ```
 
+### Borrar o cancelar el despliegue
+
+Cuando termines de usar la app (o quieras deshacer el deploy):
+
+**Eliminar todo** (pods, services, bases de datos y **datos**):
+
+```powershell
+.\scripts\undeploy-k8s.ps1
+```
+
+Equivale a `kubectl delete -f k8s.yaml` + borrar el namespace `donaton`. Úsalo si quieres **empezar de cero**.
+
+**Solo detener apps y conservar datos** (usuarios, donaciones, etc. quedan en los PVC):
+
+```powershell
+kubectl delete deployment,statefulset,service,secret -n donaton --all
+```
+
+Para volver a levantar después: `kubectl apply -f k8s.yaml`.
+
+Opciones, tabla de qué se conserva y comandos manuales: **[Paso 4 — Detener y eliminar el despliegue](#paso-4--detener-y-eliminar-el-despliegue)**.
+
 ---
 
 ## Paso 3 — Probar la aplicación
@@ -309,7 +339,9 @@ curl.exe http://localhost:30090/api/v1/necessities `
 
 ## Paso 4 — Detener y eliminar el despliegue
 
-### Opción A — Eliminar todo (incluye datos de las BD)
+Resumen rápido también en [Borrar o cancelar el despliegue](#borrar-o-cancelar-el-despliegue) (después del Paso 2).
+
+### Opción A — Eliminar / cancelar todo (incluye datos de las BD)
 
 Usa esto solo si quieres **empezar de cero** (usuarios, donaciones, etc. se pierden).
 
@@ -337,8 +369,7 @@ Si quieres bajar el stack pero que **al volver a desplegar sigan existiendo usua
 Borra solo cargas de trabajo y servicios; **deja el namespace y los PVC**:
 
 ```powershell
-kubectl delete deployment,statefulset,service -n donaton --all
-   kubectl delete secret -n donaton --all
+kubectl delete deployment,statefulset,service,secret -n donaton --all
 ```
 
 Comprueba que los volúmenes persisten:
